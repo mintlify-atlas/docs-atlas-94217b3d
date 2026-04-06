@@ -1,0 +1,138 @@
+---
+title: "Contributing Overview"
+description: "How to report bugs, propose features, and contribute code to Delta Chat Android."
+---
+
+Delta Chat Android is an open-source messenger built on email. Contributing to it means working within a real email-protocol stack, so even UI changes can touch areas like network handling, database access, and encryption — all of which are managed by the shared [deltachat-core-rust](https://github.com/deltachat/deltachat-core-rust) library.
+
+## Tech stack
+
+The Android app is written in **Java** and built with **Gradle**. The core messaging logic lives in [deltachat-core-rust](https://github.com/deltachat/deltachat-core-rust), a C/Rust library integrated into the app via JNI. Higher-level operations are also exposed through **JSON-RPC bindings** (the `chat.delta.rpc.*` package), which are generated from the core and kept in sync via a script.
+
+| Layer | Technology |
+|---|---|
+| UI / application | Java (Android SDK, minSdkVersion 21, tested from API 25) |
+| Build system | Gradle 8, Android Gradle Plugin 8.11 |
+| Messaging core | deltachat-core-rust (Rust/C, via JNI) |
+| High-level API | JSON-RPC bindings (`chat.delta.rpc.*`) |
+| Native build | Android NDK r27 |
+| Code formatting | Spotless (Google Java Format) |
+
+## Reporting bugs
+
+If you found a bug, [open an issue on GitHub](https://github.com/deltachat/deltachat-android/issues). Before filing, search both open and closed issues to avoid duplicates.
+
+<Note>
+Bugs that are not UI-specific — such as network, database, or encryption issues — may be transferred by maintainers to the [deltachat-core-rust issue tracker](https://github.com/deltachat/deltachat-core-rust/issues). If you already know the bug is in core, you can report it there directly.
+</Note>
+
+## Proposing features
+
+Feature requests go to the [Delta Chat forum](https://support.delta.chat/c/features/6), not GitHub issues. Opening a forum topic lets the community discuss the idea before any code is written.
+
+When thinking about features, keep the project's UX philosophy in mind:
+
+- Avoid options and up-front choices. Focus on concrete user stories.
+- The app should work offline and with poor network conditions.
+- Prefer solutions that are useful to many users over niche capabilities.
+- Keep the primary UI simple; bury advanced things in menus if needed.
+- Consistency matters more than novelty.
+
+## Contributing code
+
+<Steps>
+  <Step title="Fork and clone the repository">
+    Fork the repository on GitHub, then clone it with submodules:
+
+    ```bash
+    git clone --recursive https://github.com/deltachat/deltachat-android
+    ```
+
+    If you already cloned without `--recursive`, initialize the submodule afterwards:
+
+    ```bash
+    git submodule update --init --recursive
+    ```
+  </Step>
+
+  <Step title="Set up the build environment">
+    Follow the [Building the App](/dev/building) guide to get a working build environment before making any changes.
+  </Step>
+
+  <Step title="Create a branch">
+    If you have write access to the repository, push a branch named `username/feature-name` directly:
+
+    ```bash
+    git checkout -b yourname/my-feature
+    ```
+
+    If you are working from a fork, use the same naming convention in your fork.
+  </Step>
+
+  <Step title="Make your changes">
+    Keep each PR focused on a single concern. Do not mix bug fixes or features with refactoring or renaming — that makes diffs harder to review and risks requiring retranslations if string files are involved.
+
+    Run the formatter before pushing:
+
+    ```bash
+    ./gradlew spotlessApply
+    ```
+
+    CI will reject unformatted code.
+  </Step>
+
+  <Step title="Open a pull request">
+    [Open a PR](https://github.com/deltachat/deltachat-android/pulls) against the `main` branch. Include:
+
+    - A meaningful title (used when updating `CHANGELOG.md` at release time)
+    - A description of what the changes do and why
+    - Before/after screenshots if the UI is affected
+  </Step>
+</Steps>
+
+## Coding conventions
+
+The project language is **Java**. A few conventions are strongly enforced:
+
+**Formatting.** Code formatting is handled by the [Spotless](https://github.com/diffplug/spotless) Gradle plugin using Google Java Format (2-space indent, matching Android Studio defaults). Run `./gradlew spotlessApply` before every push. CI will fail if formatting is wrong.
+
+**Simplicity over abstraction.** Classic Java tends toward many classes, factories, and single-method functions. The Delta Chat codebase actively resists this pattern. Readable, direct code is preferred over fulfilling Java paradigms. Avoid extra abstraction layers — the core already provides a clean separation between UI and model.
+
+**No premature optimisation.** Don't add complexity for things that "might be needed later". They usually are not. If you do need to optimise something, add a benchmark first (see [Testing](/dev/testing)).
+
+**Consistency.** If a new approach conflicts with the existing style, match the existing style. Consistency with surrounding code is more important than applying a new pattern.
+
+**Core vs. UI.** deltachat-core-rust provides a high-level interface designed so that the UI doesn't need to do extra processing. If you find yourself doing non-trivial data transformation in the Android layer, consider whether a feature request to the core would be a better fix.
+
+## Merging conventions
+
+PRs merge to `main`, from which releases are cut.
+
+- **Squash merge** is the default. UI work tends to produce many small tweak commits that are not individually meaningful.
+- **Rebase merge** is acceptable when all commits are meaningful and well-described.
+
+Once a PR has an approval, the author can merge it (unless the maintainers note that a release is in progress). If you don't have write access, you can leave a comment in the PR requesting a specific merge strategy.
+
+If your branch has diverged from `main`, rebase before asking for review:
+
+```bash
+git rebase main
+```
+
+## Translations
+
+Translations are managed via [Transifex](https://explore.transifex.com/delta-chat/). Two projects are relevant:
+
+- **Delta Chat App** — strings used in the app UI (`res/values/strings.xml`)
+- **Delta Chat Website** — the offline help content shown at Settings → Help
+
+Most strings are shared across Android, iOS, and desktop. Write them accordingly.
+
+To propose changes to English source strings, open a PR to [`strings.xml`](https://github.com/deltachat/deltachat-android/blob/main/res/values/strings.xml). Avoid mixing new strings with refactoring in the same PR — renaming existing strings invalidates existing translations.
+
+## Communication channels
+
+- **Bug reports and PRs:** [GitHub](https://github.com/deltachat/deltachat-android)
+- **Feature discussions:** [Delta Chat Forum](https://support.delta.chat/c/features/6)
+- **Community and other contribution channels:** [delta.chat/contribute](https://delta.chat/contribute)
+- **Community standards:** [delta.chat/community-standards](https://delta.chat/community-standards)

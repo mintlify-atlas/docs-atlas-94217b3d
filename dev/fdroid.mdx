@@ -1,0 +1,174 @@
+---
+title: "F-Droid Distribution"
+description: "How Delta Chat Android is distributed through F-Droid: metadata format, version detection, build timeline, build status monitoring, and local testing."
+---
+
+Delta Chat is available on F-Droid as package `com.b44t.messenger`. F-Droid builds the app from source using its own infrastructure and distributes it independently of Google Play.
+
+## F-Droid page
+
+The Delta Chat listing on F-Droid is at:
+
+```
+https://f-droid.org/en/packages/com.b44t.messenger/
+```
+
+The F-Droid app shows the same information.
+
+---
+
+## Metadata format (fastlane)
+
+App descriptions, icons, and screenshots shown on F-Droid are maintained in this repository under `metadata/en-US/` in the [fastlane structure](https://f-droid.org/en/docs/All_About_Descriptions_Graphics_and_Screenshots/#fastlane-structure):
+
+```
+metadata/
+└── en-US/
+    ├── short_description.txt
+    ├── full_description.txt
+    ├── title.txt
+    ├── changelogs/
+    │   └── <versionCode>.txt
+    └── images/
+        ├── icon.png
+        ├── featureGraphic.png
+        └── phoneScreenshots/
+```
+
+There is also an F-Droid-specific metadata file maintained in the F-Droid data repository:
+
+```
+https://gitlab.com/fdroid/fdroiddata/blob/master/metadata/com.b44t.messenger.yml
+```
+
+This file contains build instructions and additional metadata that do not fit the fastlane format. F-Droid appends new version entries to this file automatically when a new tag is detected.
+
+---
+
+## How versions are recognised
+
+F-Droid detects new releases by watching for Git tags in the form `v1.2.3`. When you push such a tag, F-Droid picks it up and schedules a build.
+
+<Warning>
+Push the version tag only after the release APK has been tested and the `prep-VERSION` PR is merged. See the [Releasing](/dev/releasing) page for the correct tag placement in the release workflow.
+</Warning>
+
+```bash
+git tag v2.49.0 <commit-sha>
+git push --tags
+```
+
+---
+
+## Build timeline
+
+After a tag is pushed, expect the F-Droid build and distribution to take [up to 7 days](https://gitlab.com/fdroid/wiki/-/wikis/FAQ#how-long-does-it-take-for-my-app-to-show-up-on-website-and-client). The process involves:
+
+1. F-Droid's bot detects the new tag.
+2. The build server clones the repository at that tag and compiles the `fossRelease` variant.
+3. The resulting APK is signed with F-Droid's key and added to the repository index.
+4. The index is published and clients pick it up on the next refresh.
+
+---
+
+## Monitoring build status
+
+<AccordionGroup>
+  <Accordion title="Overall F-Droid build status">
+    ```
+    https://monitor.f-droid.org/builds
+    ```
+
+    If Delta Chat appears under **Need updating** or **Running**, things are progressing normally.
+  </Accordion>
+  <Accordion title="Direct APK link by version code">
+    You can access a successfully built APK even before it appears in the index:
+
+    ```
+    https://f-droid.org/repo/com.b44t.messenger_VERSIONCODE.apk
+    ```
+
+    Replace `VERSIONCODE` with the integer version code (e.g. `747`). F-Droid keeps the last 3 successful builds in its main repository; older builds move to the archive:
+
+    ```
+    https://f-droid.org/archive/com.b44t.messenger_VERSIONCODE.apk
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Changing the app description
+
+To update the short or full description shown on F-Droid, edit these files in the `deltachat-android` repository and open a PR:
+
+```
+metadata/en-US/short_description.txt
+metadata/en-US/full_description.txt
+```
+
+<Note>
+The description files must end with a newline character. Missing trailing newlines have caused F-Droid submission issues in the past (see [fdroiddata MR #3580](https://gitlab.com/fdroid/fdroiddata/merge_requests/3580)).
+</Note>
+
+---
+
+## Changing F-Droid-specific metadata
+
+The `com.b44t.messenger.yml` file in the F-Droid data repository can be modified via a pull request to:
+
+```
+https://gitlab.com/fdroid/fdroiddata/
+```
+
+After editing, reformat the file using the F-Droid server tools (see local testing below):
+
+```bash
+../fdroidserver/fdroid rewritemeta com.b44t.messenger
+```
+
+---
+
+## Local F-Droid testing
+
+You can reproduce the F-Droid build process locally to verify changes to the metadata or build instructions before submitting.
+
+<Steps>
+  <Step title="Clone the required repositories">
+    ```bash
+    git clone https://gitlab.com/fdroid/fdroiddata
+    git clone https://gitlab.com/fdroid/fdroidserver
+    cd fdroiddata
+    ```
+  </Step>
+  <Step title="Install dependencies">
+    ```bash
+    pip install pyasn1 pyasn1_modules pyaml requests
+    ```
+  </Step>
+  <Step title="Copy and adapt the server configuration">
+    ```bash
+    cp ../fdroidserver/examples/config.py .
+    # Edit config.py to set paths to your NDK, JDK, etc.
+    ```
+  </Step>
+  <Step title="Test update detection">
+    ```bash
+    ../fdroidserver/fdroid checkupdates -v com.b44t.messenger
+    # Add --allow-dirty to test with uncommitted changes
+    ```
+
+    To test against a specific branch rather than a release tag, add this line to `metadata/com.b44t.messenger.yml`:
+
+    ```yaml
+    Update Check Mode: RepoManifest/BRANCH_NAME
+    ```
+  </Step>
+  <Step title="Test the build">
+    ```bash
+    ../fdroidserver/fdroid build -v com.b44t.messenger:<versionCode>
+    ```
+
+    See [F-Droid server installation docs](https://f-droid.org/docs/Installing_the_Server_and_Repo_Tools/) and [building applications docs](https://f-droid.org/docs/Building_Applications/) for full prerequisites.
+  </Step>
+</Steps>

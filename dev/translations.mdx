@@ -1,0 +1,106 @@
+---
+title: "Translations"
+description: "How Delta Chat Android handles translations: Transifex for app strings and help content, Weblate for F-Droid metadata and changelogs."
+---
+
+Delta Chat uses two translation platforms depending on what is being translated:
+
+| Platform | What it covers |
+|---|---|
+| [Transifex](https://explore.transifex.com/delta-chat/) | App UI strings (`strings.xml`) and offline help (`help.md`) |
+| [Weblate](https://hosted.weblate.org/projects/delta-chat/) | F-Droid metadata and store changelogs |
+
+---
+
+## Transifex
+
+### Signing in
+
+Log in at [explore.transifex.com/delta-chat/](https://explore.transifex.com/delta-chat/) with an email address, GitHub, or Google account.
+
+### Two projects
+
+<AccordionGroup>
+  <Accordion title="Delta Chat App — UI strings">
+    Contains all strings that appear in the app's user interface. The English source is `res/values/strings.xml` in this repository.
+
+    These strings are shared across **all Delta Chat platforms** — Android, iOS, Linux (Delta Chat Desktop on Windows and macOS). Translations done here benefit all platforms simultaneously. When writing strings, formulate them so they make sense outside the Android context.
+  </Accordion>
+  <Accordion title="Delta Chat Website — help content">
+    Contains the offline help pages shown under **Settings → Help** in the app. The English source is `help.md` in the [deltachat-pages](https://github.com/deltachat/deltachat-pages) repository.
+
+    The same content is also rendered on [delta.chat](https://delta.chat), so it must make sense both in-app and as a web page.
+  </Accordion>
+</AccordionGroup>
+
+### Pulling translations
+
+During the release process, pull fresh translations with:
+
+```bash
+./scripts/tx-pull-translations.sh
+```
+
+This downloads all updated translation files from Transifex and writes them to the appropriate `res/values-*/strings.xml` paths.
+
+### Pushing the English source
+
+When you change `strings.xml` (for app strings) or need to start a translation round before a release, push the English source to Transifex:
+
+```bash
+./scripts/tx-push-source.sh
+```
+
+After pushing, ping active translators and allow time for translations before pulling and cutting the release.
+
+<Tip>
+The release process in `RELEASE.md` includes an optional translation round. If you add a new device message or change UI copy, push sources early, ping translators, and plan a gap of at least a few days before pulling translations and building the APK.
+</Tip>
+
+---
+
+## Changing English source strings
+
+### App UI strings (`strings.xml`)
+
+Open a PR to [`res/values/strings.xml`](https://github.com/deltachat/deltachat-android/blob/main/res/values/strings.xml) in this repository.
+
+<Warning>
+Do not mix adding new strings with unrelated refactoring in the same PR. Renaming or restructuring existing strings triggers retranslation of content that was already fully translated — avoid this unless there is a clear reason.
+</Warning>
+
+### Offline help (`help.md`)
+
+Open a PR to [`help.md`](https://github.com/deltachat/deltachat-pages/blob/master/en/help.md) in the `deltachat-pages` repository.
+
+The same caution applies: avoid combining content additions with restructuring that would invalidate existing translations.
+
+---
+
+## Weblate — metadata and changelogs
+
+F-Droid store changelogs (under `metadata/en-US/changelogs/`) and other store metadata are translated via [Weblate](https://hosted.weblate.org/projects/delta-chat/). You can edit and review translations directly in the Weblate interface without needing to run scripts locally.
+
+---
+
+## Adding a new language
+
+If you want to add a language that is not yet present in Transifex, use the helper script:
+
+```bash
+./scripts/add-language.sh LANGUAGE_CODE
+```
+
+This creates the necessary directory and placeholder files. Then open a PR with the new files.
+
+---
+
+## Checking translation coverage
+
+To check which strings are untranslated or inconsistent:
+
+```bash
+./scripts/check-translations.sh
+```
+
+This is also run as part of CI on pull requests that affect `strings.xml`.

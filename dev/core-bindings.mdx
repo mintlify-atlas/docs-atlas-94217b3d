@@ -1,0 +1,377 @@
+---
+title: "Core JNI Bindings"
+description: "Reference for the com.b44t.messenger JNI binding layer: DcContext, DcAccounts, DcChat, DcMsg, DcContact, DcChatlist, DcEvent, and FFITransport."
+---
+
+The `com.b44t.messenger` package contains thin Java wrappers around C pointers returned by `deltachat-core-rust`. Each class holds a `long` field (e.g. `contextCPtr`) and delegates all real work to native methods declared with the `native` keyword. The JNI glue lives in `jni/dc_wrapper.c`.
+
+<Warning>
+Every object in this layer holds a native resource. Objects are freed in their `finalize()` method, but do not rely on finalisation timing. Avoid creating large numbers of objects without holding references long enough for the GC to process them.
+</Warning>
+
+## DcContext
+
+`DcContext` is the central object for a single account. You rarely create it directly — when using `DcAccounts` (the preferred approach for multi-account setups), you get a `DcContext` via `DcAccounts.getAccount(accountId)`.
+
+```java
+// Single-account usage (not recommended for new code)
+DcContext ctx = new DcContext("Android", "/data/user/0/com.b44t.messenger/files/db.sqlite");
+
+// Multi-account usage (preferred)
+DcAccounts accounts = new DcAccounts("/data/user/0/com.b44t.messenger/files/accounts", channel);
+DcContext ctx = accounts.getSelectedAccount();
+```
+
+### Key methods
+
+| Method | Description |
+|---|---|
+| `setConfig(key, value)` / `getConfig(key)` | Read/write core configuration keys |
+| `isConfigured()` | Returns non-zero if the account has working credentials |
+| `startIo()` / `stopIo()` | Start/stop IMAP/SMTP background tasks (use `DcAccounts` variants instead) |
+| `maybeNetwork()` | Hint the core that network conditions may have changed |
+| `getChat(chatId)` | Return a `DcChat` for the given ID |
+| `getMsg(msgId)` | Return a `DcMsg` for the given ID |
+| `getContact(contactId)` | Return a `DcContact` for the given ID |
+| `getChatlist(flags, query, queryId)` | Return a `DcChatlist` |
+| `sendMsg(chatId, msg)` | Send a `DcMsg`; returns the new message ID |
+| `imex(what, dir)` | Import or export keys/backups |
+| `checkQr(qr)` | Parse a QR code string; returns a `DcLot` with type and data |
+
+### DC_EVENT_* constants
+
+Defined on `DcContext` and used when handling events from `DcEventEmitter`.
+
+<AccordionGroup>
+  <Accordion title="Informational events (100–400)">
+    | Constant | Value | Description |
+    |---|---|---|
+    | `DC_EVENT_INFO` | 100 | Informational log string (not for users) |
+    | `DC_EVENT_WARNING` | 300 | Warning log string (not for users) |
+    | `DC_EVENT_ERROR` | 400 | Error — show as a non-blocking bubble to the user |
+    | `DC_EVENT_ERROR_SELF_NOT_IN_GROUP` | 410 | Action failed because self is not in group |
+  </Accordion>
+  <Accordion title="Message events (2000–2016)">
+    | Constant | Value | Description |
+    |---|---|---|
+    | `DC_EVENT_MSGS_CHANGED` | 2000 | One or more messages or chats changed |
+    | `DC_EVENT_REACTIONS_CHANGED` | 2001 | Reactions on a message changed |
+    | `DC_EVENT_INCOMING_REACTION` | 2002 | Reaction to your own message received |
+    | `DC_EVENT_INCOMING_WEBXDC_NOTIFY` | 2003 | Webxdc info/summary update arrived |
+    | `DC_EVENT_INCOMING_MSG` | 2005 | A fresh message arrived — trigger a notification |
+    | `DC_EVENT_MSGS_NOTICED` | 2008 | Messages were seen/noticed |
+    | `DC_EVENT_MSG_DELIVERED` | 2010 | Message moved from pending to delivered |
+    | `DC_EVENT_MSG_FAILED` | 2012 | Message send failed |
+    | `DC_EVENT_MSG_READ` | 2015 | Remote read receipt (MDN) received |
+    | `DC_EVENT_MSG_DELETED` | 2016 | Message deleted from device |
+  </Accordion>
+  <Accordion title="Chat events (2020–2023)">
+    | Constant | Value | Description |
+    |---|---|---|
+    | `DC_EVENT_CHAT_MODIFIED` | 2020 | Group name, image, or members changed |
+    | `DC_EVENT_CHAT_EPHEMERAL_TIMER_MODIFIED` | 2021 | Ephemeral timer changed |
+    | `DC_EVENT_CHAT_DELETED` | 2023 | Chat deleted |
+  </Accordion>
+  <Accordion title="Contact, location, and connectivity events">
+    | Constant | Value | Description |
+    |---|---|---|
+    | `DC_EVENT_CONTACTS_CHANGED` | 2030 | Contact created, renamed, or blocked |
+    | `DC_EVENT_LOCATION_CHANGED` | 2035 | Live location of a contact changed |
+    | `DC_EVENT_CONFIGURE_PROGRESS` | 2041 | Account setup progress (0–1000) |
+    | `DC_EVENT_CONNECTIVITY_CHANGED` | 2100 | Network connectivity state changed |
+    | `DC_EVENT_SELFAVATAR_CHANGED` | 2110 | Own avatar changed |
+  </Accordion>
+  <Accordion title="Import/export events (2051–2052)">
+    | Constant | Value | Description |
+    |---|---|---|
+    | `DC_EVENT_IMEX_PROGRESS` | 2051 | Import/export progress (0–1000) |
+    | `DC_EVENT_IMEX_FILE_WRITTEN` | 2052 | A file was written during export |
+  </Accordion>
+  <Accordion title="SecureJoin events (2060–2061)">
+    | Constant | Value | Description |
+    |---|---|---|
+    | `DC_EVENT_SECUREJOIN_INVITER_PROGRESS` | 2060 | Inviter (QR code sharer) progress |
+    | `DC_EVENT_SECUREJOIN_JOINER_PROGRESS` | 2061 | Joiner (QR scanner) progress |
+  </Accordion>
+  <Accordion title="Webxdc events (2120–2150)">
+    | Constant | Value | Description |
+    |---|---|---|
+    | `DC_EVENT_WEBXDC_STATUS_UPDATE` | 2120 | Webxdc app sent a status update |
+    | `DC_EVENT_WEBXDC_INSTANCE_DELETED` | 2121 | Webxdc message deleted |
+    | `DC_EVENT_WEBXDC_REALTIME_DATA` | 2150 | Realtime peer channel data received |
+  </Accordion>
+  <Accordion title="Call events (2550–2580)">
+    | Constant | Value | Description |
+    |---|---|---|
+    | `DC_EVENT_INCOMING_CALL` | 2550 | Incoming audio/video call |
+    | `DC_EVENT_INCOMING_CALL_ACCEPTED` | 2560 | Incoming call accepted (possibly on another device) |
+    | `DC_EVENT_OUTGOING_CALL_ACCEPTED` | 2570 | Outgoing call accepted by recipient |
+    | `DC_EVENT_CALL_ENDED` | 2580 | Call ended |
+    | `DC_EVENT_TRANSPORTS_MODIFIED` | 2600 | Transport list changed remotely |
+  </Accordion>
+</AccordionGroup>
+
+### DC_IMEX_* constants
+
+Used as the `what` argument to `DcContext.imex()`.
+
+| Constant | Value | Description |
+|---|---|---|
+| `DC_IMEX_EXPORT_SELF_KEYS` | 1 | Export your own private/public keys |
+| `DC_IMEX_IMPORT_SELF_KEYS` | 2 | Import keys from a directory |
+| `DC_IMEX_EXPORT_BACKUP` | 11 | Export a full backup |
+| `DC_IMEX_IMPORT_BACKUP` | 12 | Import a full backup |
+
+### DC_QR_* constants
+
+Returned in the `type` field of the `DcLot` from `DcContext.checkQr()`.
+
+<AccordionGroup>
+  <Accordion title="Contact/group verification QR types">
+    | Constant | Value | Meaning |
+    |---|---|---|
+    | `DC_QR_ASK_VERIFYCONTACT` | 200 | Ask to verify contact via SecureJoin |
+    | `DC_QR_ASK_VERIFYGROUP` | 202 | Ask to join a verified group |
+    | `DC_QR_ASK_JOIN_BROADCAST` | 204 | Ask to join a broadcast channel |
+    | `DC_QR_FPR_OK` | 210 | Fingerprint matches known contact |
+    | `DC_QR_FPR_MISMATCH` | 220 | Fingerprint mismatch |
+    | `DC_QR_FPR_WITHOUT_ADDR` | 230 | Fingerprint present but no address |
+  </Accordion>
+  <Accordion title="Account and backup QR types">
+    | Constant | Value | Meaning |
+    |---|---|---|
+    | `DC_QR_ACCOUNT` | 250 | Scan to add a new account |
+    | `DC_QR_BACKUP2` | 252 | Scan to receive a backup |
+    | `DC_QR_BACKUP_TOO_NEW` | 255 | Backup format too new for this client |
+    | `DC_QR_LOGIN` | 520 | QR-code-based login |
+  </Accordion>
+  <Accordion title="Miscellaneous QR types">
+    | Constant | Value | Meaning |
+    |---|---|---|
+    | `DC_QR_WEBRTC` | 260 | WebRTC server configuration |
+    | `DC_QR_PROXY` | 271 | Proxy server configuration |
+    | `DC_QR_ADDR` | 320 | Email address |
+    | `DC_QR_TEXT` | 330 | Arbitrary text |
+    | `DC_QR_URL` | 332 | URL |
+    | `DC_QR_ERROR` | 400 | Could not parse QR content |
+  </Accordion>
+</AccordionGroup>
+
+### DC_SOCKET_* constants
+
+Used when configuring TLS mode for IMAP/SMTP connections.
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `DC_SOCKET_AUTO` | 0 | Autodetect (default) |
+| `DC_SOCKET_SSL` | 1 | Implicit TLS (port 993/465) |
+| `DC_SOCKET_STARTTLS` | 2 | STARTTLS upgrade |
+| `DC_SOCKET_PLAIN` | 3 | No encryption |
+
+---
+
+## DcAccounts
+
+`DcAccounts` manages multiple accounts stored in a directory. Construct it once at application start:
+
+```java
+DcEventChannel channel = new DcEventChannel();
+DcAccounts accounts = new DcAccounts(accountsDir, channel);
+accounts.startIo();
+```
+
+Always use `DcAccounts.startIo()` / `stopIo()` / `maybeNetwork()` rather than the per-context equivalents when running in multi-account mode.
+
+| Method | Description |
+|---|---|
+| `getAll()` | Returns `int[]` of all account IDs |
+| `getAccount(id)` | Returns a `DcContext` for that ID |
+| `getSelectedAccount()` | Returns the currently active `DcContext` |
+| `selectAccount(id)` | Switch the active account |
+| `migrateAccount(dbfile)` | Import a legacy single-account database |
+| `removeAccount(id)` | Delete an account |
+| `getEventEmitter()` | Returns a cross-account `DcEventEmitter` |
+| `getJsonrpcInstance()` | Returns the `DcJsonrpcInstance` used by `FFITransport` |
+| `backgroundFetch(timeoutSeconds)` | Run a background fetch for all accounts |
+
+---
+
+## DcChat
+
+Represents a single chat. Retrieve it via `DcContext.getChat(chatId)`.
+
+### Chat type constants
+
+| Constant | Value | Description |
+|---|---|---|
+| `DC_CHAT_TYPE_UNDEFINED` | 0 | Invalid/unknown |
+| `DC_CHAT_TYPE_SINGLE` | 100 | One-to-one chat |
+| `DC_CHAT_TYPE_GROUP` | 120 | Group chat |
+| `DC_CHAT_TYPE_MAILINGLIST` | 140 | Mailing list |
+| `DC_CHAT_TYPE_OUT_BROADCAST` | 160 | Outgoing broadcast channel (sender side) |
+| `DC_CHAT_TYPE_IN_BROADCAST` | 165 | Incoming broadcast channel (subscriber side) |
+
+### Chat visibility constants
+
+| Constant | Value | Description |
+|---|---|---|
+| `DC_CHAT_VISIBILITY_NORMAL` | 0 | Regular position in the chat list |
+| `DC_CHAT_VISIBILITY_ARCHIVED` | 1 | Hidden in the archived view |
+| `DC_CHAT_VISIBILITY_PINNED` | 2 | Pinned at the top of the chat list |
+
+### Special chat IDs
+
+| Constant | Value | Description |
+|---|---|---|
+| `DC_CHAT_NO_CHAT` | 0 | No chat / invalid |
+| `DC_CHAT_ID_ARCHIVED_LINK` | 6 | The "n archived chats" entry in the chatlist |
+| `DC_CHAT_ID_ALLDONE_HINT` | 7 | The "all done" hint at the end of the chatlist |
+
+### Key methods
+
+`getId()`, `getType()`, `getVisibility()`, `getName()`, `getProfileImage()`, `getColor()`, `isEncrypted()`, `isMuted()`, `isContactRequest()`, `canSend()`, `isSelfTalk()`, `isDeviceTalk()`, `isMultiUser()`.
+
+---
+
+## DcMsg
+
+Represents a single message. Retrieve it via `DcContext.getMsg(msgId)` or construct a new one for sending with `new DcMsg(context, viewtype)`.
+
+### View type constants
+
+| Constant | Value | Description |
+|---|---|---|
+| `DC_MSG_TEXT` | 10 | Plain text |
+| `DC_MSG_IMAGE` | 20 | Image (JPEG, PNG, …) |
+| `DC_MSG_GIF` | 21 | Animated GIF |
+| `DC_MSG_STICKER` | 23 | Sticker |
+| `DC_MSG_AUDIO` | 40 | Audio file |
+| `DC_MSG_VOICE` | 41 | Voice message |
+| `DC_MSG_VIDEO` | 50 | Video file |
+| `DC_MSG_FILE` | 60 | Generic file attachment |
+| `DC_MSG_CALL` | 71 | Call info message |
+| `DC_MSG_WEBXDC` | 80 | Webxdc mini-app |
+| `DC_MSG_VCARD` | 90 | vCard contact |
+
+### Message state constants
+
+| Constant | Value | Description |
+|---|---|---|
+| `DC_STATE_IN_FRESH` | 10 | Incoming, not yet noticed |
+| `DC_STATE_IN_NOTICED` | 13 | Incoming, noticed but not seen |
+| `DC_STATE_IN_SEEN` | 16 | Incoming, seen (MDN may be sent) |
+| `DC_STATE_OUT_PREPARING` | 18 | Outgoing, file being prepared |
+| `DC_STATE_OUT_DRAFT` | 19 | Saved as draft |
+| `DC_STATE_OUT_PENDING` | 20 | Waiting to be sent |
+| `DC_STATE_OUT_FAILED` | 24 | Send failed |
+| `DC_STATE_OUT_DELIVERED` | 26 | Delivered to server |
+| `DC_STATE_OUT_MDN_RCVD` | 28 | Read receipt received |
+
+### Download state constants
+
+| Constant | Value | Description |
+|---|---|---|
+| `DC_DOWNLOAD_DONE` | 0 | Fully downloaded |
+| `DC_DOWNLOAD_AVAILABLE` | 10 | Available on server, not downloaded |
+| `DC_DOWNLOAD_FAILURE` | 20 | Download failed |
+| `DC_DOWNLOAD_UNDECIPHERABLE` | 30 | Downloaded but could not decrypt |
+| `DC_DOWNLOAD_IN_PROGRESS` | 1000 | Currently downloading |
+
+### System message info type constants
+
+| Constant | Value | Description |
+|---|---|---|
+| `DC_INFO_GROUP_NAME_CHANGED` | 2 | Group name was changed |
+| `DC_INFO_GROUP_IMAGE_CHANGED` | 3 | Group image was changed |
+| `DC_INFO_MEMBER_ADDED_TO_GROUP` | 4 | A member was added |
+| `DC_INFO_MEMBER_REMOVED_FROM_GROUP` | 5 | A member was removed |
+| `DC_INFO_PROTECTION_ENABLED` | 11 | End-to-end protection enabled |
+| `DC_INFO_EPHEMERAL_TIMER_CHANGED` | 10 | Ephemeral timer changed |
+| `DC_INFO_WEBXDC_INFO_MESSAGE` | 32 | Webxdc info/summary update |
+
+---
+
+## DcContact
+
+Represents a contact. Retrieve it via `DcContext.getContact(contactId)`.
+
+### Special contact IDs
+
+| Constant | Value | Description |
+|---|---|---|
+| `DC_CONTACT_ID_SELF` | 1 | The account owner |
+| `DC_CONTACT_ID_INFO` | 2 | The device-info pseudo-contact |
+| `DC_CONTACT_ID_DEVICE` | 5 | The device-chat pseudo-contact |
+| `DC_CONTACT_ID_LAST_SPECIAL` | 9 | All IDs ≤ 9 are reserved |
+
+### Key methods
+
+`getId()`, `getName()`, `getAuthName()`, `getDisplayName()`, `getAddr()`, `getProfileImage()`, `getColor()`, `getStatus()`, `getLastSeen()`, `wasSeenRecently()`, `isBlocked()`, `isVerified()`, `isKeyContact()`, `isBot()`.
+
+---
+
+## DcChatlist
+
+A snapshot of the chat list at the time of the call. Retrieve it via `DcContext.getChatlist(flags, query, queryId)`.
+
+```java
+// All normal chats
+DcChatlist list = ctx.getChatlist(0, null, 0);
+
+// Archived chats only
+DcChatlist archived = ctx.getChatlist(DcContext.DC_GCL_ARCHIVED_ONLY, null, 0);
+
+// Search
+DcChatlist results = ctx.getChatlist(0, "searchterm", 0);
+
+int count = list.getCnt();
+for (int i = 0; i < count; i++) {
+    int chatId = list.getChatId(i);
+    DcChat chat = list.getChat(i);
+    int msgId = list.getMsgId(i);
+}
+```
+
+### Chatlist flag constants
+
+| Constant | Value | Description |
+|---|---|---|
+| `DC_GCL_ARCHIVED_ONLY` | 0x01 | Return archived chats only |
+| `DC_GCL_NO_SPECIALS` | 0x02 | Omit the "archived" link entry |
+| `DC_GCL_ADD_ALLDONE_HINT` | 0x04 | Append the "all done" hint |
+| `DC_GCL_FOR_FORWARDING` | 0x08 | Return chats suitable for forwarding |
+
+---
+
+## DcEvent
+
+Encapsulates a single event from the core. You receive `DcEvent` objects from `DcEventEmitter.getNextEvent()`.
+
+```java
+DcEvent event = emitter.getNextEvent(); // null means the emitter was closed
+int type       = event.getId();          // DC_EVENT_* constant
+int accountId  = event.getAccountId();   // which account emitted the event
+int data1      = event.getData1Int();    // first payload integer
+int data2      = event.getData2Int();    // second payload integer
+String data2s  = event.getData2Str();    // string payload (if any)
+byte[] blob    = event.getData2Blob();   // binary payload (e.g. realtime data)
+```
+
+The meaning of `data1` and `data2` depends on the event type. For `DC_EVENT_INCOMING_MSG`, `data1` is the `chatId` and `data2` is the `msgId`.
+
+---
+
+## FFITransport
+
+`FFITransport` bridges the `Rpc` JSON-RPC client to the native core. It extends `BaseRpcTransport` and delegates to `DcJsonrpcInstance`:
+
+```java
+DcJsonrpcInstance jsonrpc = accounts.getJsonrpcInstance();
+FFITransport transport    = new FFITransport(jsonrpc);
+Rpc rpc                   = new Rpc(transport);
+
+// Now use rpc.*() methods
+List<Account> allAccounts = rpc.getAllAccounts();
+```
+
+`FFITransport.sendRequest(json)` calls `dcJsonrpcInstance.request(json)`, which passes the serialised JSON-RPC request to the Rust core via JNI. `FFITransport.getResponse()` calls `dcJsonrpcInstance.getNextResponse()`, which blocks until the core produces a response.

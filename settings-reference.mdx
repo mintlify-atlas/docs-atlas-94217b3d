@@ -1,0 +1,107 @@
+---
+title: "Settings Reference"
+description: "A complete reference for all settings available in the Delta Chat Android app."
+---
+
+Access settings by tapping your profile avatar in the top-left corner and selecting **Settings**, or via the overflow menu in the chat list.
+
+## Notifications
+
+<AccordionGroup>
+  <Accordion title="Notifications">
+    Controls whether Delta Chat delivers push notifications for new messages.
+    - **Enable notifications** — Master toggle for all Delta Chat notifications.
+    - **Notification sound** — Choose a ringtone or set to silent.
+    - **Vibrate** — Enable haptic feedback for notifications.
+    - **Show preview** — Display message content in the notification shade.
+  </Accordion>
+  <Accordion title="Mute a chat">
+    Muting is per-chat, not global. Long-press a chat in the chat list and select **Mute**. Choose a duration (1 hour, 8 hours, 1 week) or mute indefinitely.
+  </Accordion>
+</AccordionGroup>
+
+## Chats
+
+<AccordionGroup>
+  <Accordion title="Outgoing media quality">
+    Controls compression applied to outgoing images and videos:
+    - **Balanced** — Compressed for faster delivery and smaller file sizes.
+    - **Original quality** — No compression; sends files as-is.
+    You can always send a single file uncompressed by sharing it as a file attachment.
+  </Accordion>
+  <Accordion title="Chat background">
+    Set a custom wallpaper for the chat view. Choose from included patterns or pick an image from your gallery.
+  </Accordion>
+  <Accordion title="Delete old messages">
+    Automatically delete messages older than a set duration. Options: never, after 1 day, 1 week, 4 weeks.
+    Helps manage device storage for active accounts.
+  </Accordion>
+  <Accordion title="Show classic emails">
+    Controls whether plain email messages (from non-Delta-Chat contacts) appear in Delta Chat:
+    - **Off** — Only Delta Chat messages are shown.
+    - **From accepted contacts** — Show emails from people already in your contacts.
+    - **All** — Show all incoming email as messages.
+  </Accordion>
+</AccordionGroup>
+
+## Appearance
+
+<AccordionGroup>
+  <Accordion title="Theme">
+    Switch between system default, light, and dark themes. Delta Chat follows the system theme by default.
+  </Accordion>
+  <Accordion title="Chat bubbles">
+    Adjust the visual style of message bubbles.
+  </Accordion>
+</AccordionGroup>
+
+## Privacy & Security
+
+<AccordionGroup>
+  <Accordion title="App lock">
+    Require your device PIN, password, or biometrics to open Delta Chat. Also protects sensitive actions like profile deletion and relay management.
+  </Accordion>
+  <Accordion title="Read receipts">
+    Toggle whether Delta Chat sends read receipts to your contacts. Disabling this prevents contacts from knowing when you've opened a message, but you also won't receive read receipts from them.
+  </Accordion>
+  <Accordion title="Metadata protection">
+    Delta Chat minimises metadata in outgoing messages by default — recipients are not disclosed to the server, and certain email headers are omitted. This is always on and cannot be disabled.
+  </Accordion>
+</AccordionGroup>
+
+## Advanced
+
+<AccordionGroup>
+  <Accordion title="Proxy">
+    Configure a SOCKS5 or HTTP proxy for all relay connections. You can add a proxy by scanning a QR code or entering the address manually. See [Relays and Transport](/relays-and-transport) for details.
+  </Accordion>
+  <Accordion title="Connectivity">
+    Shows the connection status for each configured relay, inbox quota, and last sync time. Useful for diagnosing delivery problems.
+  </Accordion>
+  <Accordion title="View log">
+    Shows the app's internal log for debugging connection and delivery issues. You can share the log with developers when reporting bugs.
+  </Accordion>
+  <Accordion title="Send statistics (opt-in)">
+    Optionally send anonymous usage statistics to Delta Chat developers. This is opt-in and disabled by default. No message content or contact data is included.
+  </Accordion>
+  <Accordion title="Export keys">
+    Export your OpenPGP private keys to a file for backup or migration. See [Backup and Restore](/backup-and-restore).
+  </Accordion>
+  <Accordion title="Import keys">
+    Import previously exported OpenPGP keys. Useful after restoring a profile or switching devices.
+  </Accordion>
+</AccordionGroup>
+
+## Account
+
+<AccordionGroup>
+  <Accordion title="Profile name and avatar">
+    Change the display name and profile photo that your contacts see.
+  </Accordion>
+  <Accordion title="Relays">
+    Manage your connected email servers. See [Relays and Transport](/relays-and-transport).
+  </Accordion>
+  <Accordion title="Delete account">
+    Permanently delete this profile and all its data from your device. Protected by device PIN/biometrics. Cannot be undone — [create a backup](/backup-and-restore) first.
+  </Accordion>
+</AccordionGroup>

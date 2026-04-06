@@ -1,0 +1,225 @@
+---
+title: "Releasing"
+description: "Step-by-step instructions for releasing a new version of Delta Chat Android, from updating core to tagging for F-Droid."
+---
+
+This page documents the full release process for Delta Chat Android. Follow the steps in order. Each stage has a concrete checkpoint before moving to the next.
+
+<Warning>
+Once you push an APK to Google Play and advance the rollout to 100%, you cannot retract it. You must submit a new version. Keep rollout at 50% until you are confident the release is stable.
+</Warning>
+
+## Version numbering
+
+Version names follow `MAJOR.MINOR.PATCH` (e.g. `2.48.0`), set in `build.gradle`:
+
+```groovy
+defaultConfig {
+    versionCode 746       // increment by 1 for every release
+    versionName "2.48.0"  // no leading "v"
+}
+```
+
+`versionCode` must always increase. `versionName` is the human-readable label shown in stores and the app's About screen.
+
+---
+
+## Phase 1 — Update core and translations
+
+Open a PR named `update-core-and-stuff-DATE`.
+
+<Steps>
+  <Step title="Update deltachat-core-rust">
+    ```bash
+    ./scripts/update-core.sh                      # prints the current branch/tag
+    ./scripts/update-core.sh BRANCH_OR_TAG        # advance to a tag or branch tip
+    ./scripts/clean-core.sh                       # optional: clean build artifacts
+    ./scripts/ndk-make.sh                         # compile the Rust core for all ABIs
+    ```
+  </Step>
+  <Step title="Update CHANGELOG.md">
+    Pull entries from the [core changelog](https://github.com/chatmail/core/blob/main/CHANGELOG.md). Rewrite them in user-facing language — no technical jargon, no mention of Rust internals. Append `update to core X.Y.Z` or `using core X.Y.Z` at the end of the new entry block.
+  </Step>
+  <Step title="Regenerate JSON-RPC bindings">
+    ```bash
+    ./scripts/update-rpc-bindings.sh
+    ```
+
+    This rewrites all files under `src/main/java/chat/delta/rpc/`. Commit the result.
+  </Step>
+  <Step title="Pull translations">
+    ```bash
+    ./scripts/tx-pull-translations.sh
+    ./scripts/create-local-help.sh   # requires deltachat-pages checked out at ../deltachat-pages
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Phase 2 — Prepare the release
+
+Open a PR named `prep-VERSION` (no leading `v`, e.g. `prep-2.48.0`).
+
+<Steps>
+  <Step title="Finalise CHANGELOG.md">
+    Rename the top-most header to include the version number and date in `YYYY-MM` format. Summarise any beta entries into a single readable block for end users.
+  </Step>
+  <Step title="Add a device message">
+    In `ConversationListActivity::onCreate()`, add (or replace) the device message that greets users after the update. Keep it short and jargon-free. It should describe the user-visible outcome, not the technical change.
+
+    If time permits, push the string to Transifex first:
+
+    ```bash
+    ./scripts/tx-push-source.sh
+    ```
+
+    Ping translators and wait for translations before proceeding. Then pull again:
+
+    ```bash
+    ./scripts/tx-pull-translations.sh
+    ```
+  </Step>
+  <Step title="Bump version in build.gradle">
+    Increment `versionCode` by 1 and update `versionName` to the new version string.
+
+    ```groovy
+    versionCode 747
+    versionName "2.49.0"
+    ```
+  </Step>
+  <Step title="Build APKs">
+    **Debug APK:** `Build → Build Bundle(s)/APK → Build APK(s)`
+
+    **Release APK:** `Build → Generate Signed Bundle or APK`, select APK, provide your signing keys, choose flavor `gplayRelease`. The output lands in `gplay/release/`.
+  </Step>
+</Steps>
+
+---
+
+## Phase 3 — Push test releases
+
+<Steps>
+  <Step title="Upload to testrun.org">
+    ```bash
+    ./scripts/upload-beta.sh VERSION
+    ```
+
+    The script uploads both APKs to testrun.org and drafts a message.
+  </Step>
+  <Step title="Post to testing channels">
+    Add notes about what to test specifically (not the changelog). Post the message to the relevant testing channels and ping testers.
+  </Step>
+  <Step title="Merge the prep PR">
+    Make sure `prep-VERSION` is merged before proceeding. If serious regressions surface, fix them and start over from Phase 1.
+  </Step>
+</Steps>
+
+---
+
+## Phase 4 — Release on get.delta.chat
+
+<Note>
+Use the exact same APK binary throughout all subsequent steps. Do not rebuild — a new build produces a different binary even with the same source.
+</Note>
+
+<Steps>
+  <Step title="Upload the APK">
+    ```bash
+    ./scripts/upload-release.sh VERSION
+    ```
+  </Step>
+  <Step title="Update the download page">
+    Open a PR to bump `VERSION_ANDROID` (no leading `v`) in:
+
+    `https://github.com/deltachat/deltachat-pages/blob/master/_includes/download-boxes.html`
+
+    Merge the PR and confirm the APK is accessible at get.delta.chat before pushing to any store.
+  </Step>
+</Steps>
+
+---
+
+## Phase 5 — Release on Google Play
+
+<Steps>
+  <Step title="Create a new release">
+    Open [play.google.com/apps/publish](https://play.google.com/apps/publish/).
+
+    Navigate to **Delta Chat → Test and release → Production → Create new release** and upload the APK.
+  </Step>
+  <Step title="Fill release details">
+    - **Release notes:** max 500 characters. End with: `"These features will roll out over the coming days. Thanks for using Delta Chat!"`
+    - **Release name:** accept the default (e.g. `747 (2.49.0)`).
+  </Step>
+  <Step title="Set initial rollout">
+    Click **Next**, set **Rollout Percentage** to **50%**, click **Save**.
+
+    Go to **Publishing Overview** and click **Send change for review**, then confirm.
+  </Step>
+  <Step title="Increase rollout gradually">
+    - After 2 days: change rollout to 99%.
+    - After 2 more days: change rollout to 100%.
+
+    Monitor crash rates and user feedback between each step. At 100% you can no longer retract — a new version submission is required if problems appear.
+  </Step>
+</Steps>
+
+---
+
+## Phase 6 — Tag for F-Droid and create GitHub release
+
+<Steps>
+  <Step title="Tag the commit">
+    Make sure everything is pushed, then:
+
+    ```bash
+    git tag v2.49.0 COMMIT_SHA
+    git push --tags
+    ```
+
+    F-Droid detects tags matching `v\d+\.\d+\.\d+` and starts an automated build. Allow up to 7 days for the build and distribution to complete.
+  </Step>
+  <Step title="Draft a GitHub release">
+    On [github.com/deltachat/deltachat-android/releases](https://github.com/deltachat/deltachat-android/releases):
+
+    - Tap **Draft a new Release**.
+    - Choose the tag you just pushed.
+    - Fill in the changelog (same text as CHANGELOG.md entry, adapted for Markdown).
+    - Attach the release APK under **Attach binary**.
+    - Tap **Publish release**.
+  </Step>
+</Steps>
+
+---
+
+## Phase 7 — Huawei AppGallery
+
+<Steps>
+  <Step title="Upload the APK">
+    Open [developer.huawei.com/consumer/en/appgallery](https://developer.huawei.com/consumer/en/appgallery).
+
+    Navigate to **Upload your app → Android → Delta Chat → Update → Update (upper right) → Manage Packages → Upload**, upload the same APK, hit **Save**.
+  </Step>
+  <Step title="Update release notes">
+    Under **App Information → New Features**, update the text, hit **Save**, then **Next**, then **Submit**. Confirm the version and language on the next page.
+  </Step>
+</Steps>
+
+---
+
+## Other stores
+
+Stores such as Passkoocheh are not under the core team's control. For significant releases, ping store maintainers directly and ask them to update.
+
+---
+
+## Pre-release testing checklist
+
+Run through these checks before pushing to any store:
+
+- Create a new account (Gmail, Yandex, or another provider)
+- Send and receive a message
+- Create a group chat
+- Perform a contact verification via QR scan
+- Join a group via a QR scan

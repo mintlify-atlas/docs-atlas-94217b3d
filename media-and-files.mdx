@@ -1,0 +1,98 @@
+---
+title: "Media and Files"
+description: "Send photos, videos, voice messages, files, and share your location in Delta Chat."
+---
+
+Delta Chat supports a full range of media types. All media is sent end-to-end encrypted, just like text messages.
+
+## Sending media
+
+Tap the **paperclip** (attachment) icon in the message bar to choose what to send:
+
+<CardGroup cols={2}>
+  <Card title="Camera" icon="camera">
+    Take a photo or record a video directly from within Delta Chat
+  </Card>
+  <Card title="Gallery" icon="images">
+    Pick images or videos from your device's media library
+  </Card>
+  <Card title="File" icon="file">
+    Share any file — documents, archives, PDFs, and more
+  </Card>
+  <Card title="Location" icon="location-dot">
+    Share your current location or stream it live
+  </Card>
+  <Card title="Contact" icon="address-card">
+    Share a contact card (vCard) with another person
+  </Card>
+  <Card title="Voice message" icon="microphone">
+    Hold the microphone button to record a voice note
+  </Card>
+</CardGroup>
+
+## Message types
+
+Delta Chat supports the following media message types (from `DcMsg`):
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `DC_MSG_TEXT` | 10 | Plain text message |
+| `DC_MSG_IMAGE` | 20 | Image (JPEG, PNG, WebP, etc.) |
+| `DC_MSG_GIF` | 21 | Animated GIF |
+| `DC_MSG_STICKER` | 23 | Sticker image |
+| `DC_MSG_AUDIO` | 40 | Audio file |
+| `DC_MSG_VOICE` | 41 | Voice recording |
+| `DC_MSG_VIDEO` | 50 | Video file |
+| `DC_MSG_FILE` | 60 | Generic file |
+| `DC_MSG_VCARD` | 90 | Contact card |
+
+## Media quality
+
+You can control the quality of outgoing images and videos to balance file size versus clarity.
+
+Go to **Settings → Chats → Outgoing Media Quality**:
+
+- **Balanced** (`DC_MEDIA_QUALITY_BALANCED`) — Default. Images and video are compressed for faster delivery.
+- **Original quality** — Sends media without compression. Useful for sharing high-resolution photos.
+
+<Tip>
+  To always send original quality for a single message, use the share sheet and choose **Send as file** rather than the image picker — files are never recompressed.
+</Tip>
+
+## Voice messages
+
+Hold the **microphone** icon to record. A waveform shows your recording in real time. Release to send, or swipe left to cancel.
+
+Voice messages support **background playback** — you can switch to another app while a voice message or audio file is playing.
+
+## Video compatibility
+
+Delta Chat sends `.webm` videos as generic file attachments rather than video messages. This is intentional — `.webm` is not supported on all platforms (e.g. iOS), so sending as a file ensures recipients can always download and open it.
+
+Standard `.mp4` videos are sent as video messages and preview inline.
+
+## Stickers
+
+Tap the **sticker icon** in the attachment bar to open the sticker picker. Sticker packs are stored locally on your device and can be shared between chat members.
+
+## Location sharing
+
+<Steps>
+  <Step title="Share your location">
+    Tap the attachment icon and choose **Location**. You can share your current position as a one-time pin.
+  </Step>
+  <Step title="Stream live location">
+    Choose **Stream location** to broadcast your position continuously for a set duration (5 minutes, 30 minutes, etc.). Other chat members see your position update on a map in real time.
+  </Step>
+  <Step title="Stop streaming">
+    Tap the location indicator in the chat or go to **Settings → Stop location streaming** to end early.
+  </Step>
+</Steps>
+
+<Note>
+  Location sharing requires the `ACCESS_FINE_LOCATION` and optionally `ACCESS_BACKGROUND_LOCATION` permissions. Delta Chat asks for these only when you first use location sharing.
+</Note>
+
+## Media gallery
+
+To browse all media shared in a chat, tap the chat name to open the profile, then tap **Shared Media**. You can view images, videos, documents, and links separately in filterable tabs.

@@ -1,0 +1,89 @@
+---
+title: "Webxdc Apps"
+description: "Run mini web apps inside your Delta Chat conversations — games, polls, shared lists, and more."
+---
+
+**Webxdc** apps are small, self-contained web applications that run directly inside a Delta Chat chat. They can share state with all chat members in real time, without any external server.
+
+## What can Webxdc apps do?
+
+<CardGroup cols={2}>
+  <Card title="Shared lists" icon="list-check">
+    Shopping lists, to-dos, and task trackers that sync across all chat members
+  </Card>
+  <Card title="Games" icon="gamepad">
+    Multiplayer games that work over chat messages — no game server needed
+  </Card>
+  <Card title="Polls and voting" icon="square-poll-vertical">
+    Create polls and collect votes from group members
+  </Card>
+  <Card title="Calendars" icon="calendar">
+    Shared event scheduling within a group
+  </Card>
+</CardGroup>
+
+All state updates flow as encrypted messages through the chat, so Webxdc apps work over Delta Chat's existing privacy and security guarantees.
+
+## Opening a Webxdc app
+
+To open a Webxdc app sent to you in a chat, simply tap the app's message bubble. The app opens in a sandboxed WebView within Delta Chat.
+
+## Webxdc Store
+
+Delta Chat includes a built-in **Webxdc Store** where you can discover and install apps:
+
+<Steps>
+  <Step title="Open the store">
+    Tap the compose button in the chat list and choose **Webxdc Store**, or find it via the attachment menu inside a chat.
+  </Step>
+  <Step title="Browse apps">
+    Browse available apps by category. Each app shows its name, icon, and a short description.
+  </Step>
+  <Step title="Send to a chat">
+    Tap an app and choose the chat to share it to. The app is delivered as a message and all members can open it.
+  </Step>
+</Steps>
+
+## Sharing a Webxdc app
+
+You can share any `.xdc` file as a Webxdc app. Send it like any other file attachment — Delta Chat recognises the `.xdc` extension and renders it as a Webxdc app bubble.
+
+## App metadata
+
+Each Webxdc app exposes metadata through its manifest. Delta Chat reads and displays:
+
+| Field | Description |
+|-------|-------------|
+| `name` | App name (shown in the chat bubble) |
+| `icon` | App icon (square image, Delta Chat adds rounded corners) |
+| `summary` | Short status string updated by the app, e.g. "2 votes", "Score: 42" |
+| `document` | Document name, if the app represents a file |
+| `sourceCodeUrl` | Link to the app's source code (shown in an info menu) |
+| `internetAccess` | Whether the app needs full internet access |
+
+## Real-time updates
+
+Webxdc apps can send and receive status updates in real time using the `window.webxdc.sendUpdate()` JavaScript API. Updates are delivered as encrypted messages to all chat participants, so every member sees the same app state.
+
+The `sendUpdateInterval` and `sendUpdateMaxSize` values (exposed via `window.sendUpdateInterval` and `window.sendUpdateMaxSize`) control how often updates can be sent and their maximum size.
+
+Delta Chat fires `DC_EVENT_WEBXDC_STATUS_UPDATE` (event 2120) whenever a new Webxdc update arrives.
+
+## Notifications from Webxdc apps
+
+Webxdc apps can send in-chat notifications using the `window.webxdc.sendUpdate()` notification feature. These appear as standard Delta Chat notifications. If the chat is muted, notification-to-all messages from in-chat apps are suppressed.
+
+## Security and sandboxing
+
+Webxdc apps run in a sandboxed WebView:
+- No access to your contacts, messages, or other device data
+- No network access by default (unless `internetAccess: true` is set in the manifest)
+- State is only shared via the Webxdc update API — apps cannot access the chat directly
+
+<Note>
+  Webxdc apps with `internetAccess: true` can make arbitrary network requests. Only install apps from sources you trust.
+</Note>
+
+## Deleting a Webxdc app instance
+
+When a Webxdc message is deleted from the chat, Delta Chat fires `DC_EVENT_WEBXDC_INSTANCE_DELETED` (event 2121) and cleans up all associated app state and data.

@@ -1,0 +1,132 @@
+---
+title: "Architecture Overview"
+description: "How Delta Chat Android is structured: layers, packages, event system, build flavors, and the submodule relationship to deltachat-core-rust."
+---
+
+Delta Chat Android is a layered application. The Android UI (written in Java) talks to `deltachat-core-rust` through two distinct API layers: a legacy JNI binding layer and a newer JSON-RPC layer. Understanding where each layer lives and why it exists will help you navigate the codebase and decide which API to reach for when building new features.
+
+## Layer diagram
+
+```
+┌─────────────────────────────────────────────┐
+│  Android UI  (org.thoughtcrime.securesms)   │
+│  Activities, Fragments, Adapters, Services  │
+└────────────────────┬────────────────────────┘
+                     │  calls
+        ┌────────────┴─────────────┐
+        │  Legacy JNI layer        │  ← com.b44t.messenger
+        │  DcContext, DcAccounts,  │
+        │  DcChat, DcMsg, …        │
+        │                          │
+        │  JSON-RPC layer          │  ← chat.delta.rpc
+        │  Rpc, FFITransport,      │
+        │  generated types         │
+        └────────────┬─────────────┘
+                     │  JNI / FFI
+        ┌────────────┴─────────────┐
+        │  deltachat-core-rust     │  ← jni/deltachat-core-rust
+        │  (Rust, compiled to .so) │
+        └──────────────────────────┘
+```
+
+## Packages
+
+| Package | Role |
+|---|---|
+| `org.thoughtcrime.securesms` | All Android UI: Activities, Fragments, Adapters, ViewModels, Services |
+| `com.b44t.messenger` | Legacy JNI bindings — thin Java wrappers around C pointers returned by the core |
+| `chat.delta.rpc` | JSON-RPC client (`Rpc.java`) and transport (`FFITransport`) |
+| `chat.delta.rpc.types` | Auto-generated Java POJOs for all JSON-RPC request/response types |
+
+<Note>
+The application ID on the device is `com.b44t.messenger` (foss flavor) or `chat.delta` (gplay flavor). The Java package for the UI is `org.thoughtcrime.securesms`, a historical artifact of the fork origin.
+</Note>
+
+## Two API layers
+
+### Legacy JNI (`com.b44t.messenger`)
+
+This is the original binding layer. Every class (`DcContext`, `DcChat`, `DcMsg`, etc.) holds a `long` C pointer (e.g., `contextCPtr`). The JNI glue in `jni/dc_wrapper.c` translates Java calls into calls on the Rust/C core.
+
+Use this layer when you need to work with existing code or when the higher-level JSON-RPC API doesn't expose what you need yet.
+
+### JSON-RPC (`chat.delta.rpc`)
+
+The newer layer. `Rpc.java` is auto-generated from the core's JSON-RPC schema and exposes every core API as a typed Java method. The transport is `FFITransport`, which serialises calls to JSON, passes them to `DcJsonrpcInstance.request()`, and reads responses via `DcJsonrpcInstance.getNextResponse()`.
+
+Prefer the JSON-RPC layer for new features: it is type-safe, it uses Jackson for serialisation, and its types are regenerated automatically when the core schema changes.
+
+## Event system
+
+The core pushes events to the UI asynchronously. There are two ways to receive them, matching the two API layers.
+
+### Legacy event path
+
+```java
+// Obtain an emitter from DcAccounts (preferred) or DcContext
+DcEventEmitter emitter = dcAccounts.getEventEmitter();
+
+// Poll in a background thread
+while (true) {
+    DcEvent event = emitter.getNextEvent(); // blocks until an event arrives
+    if (event == null) break;
+    handleEvent(event.getId(), event.getData1Int(), event.getData2Int(), event.getData2Str());
+}
+```
+
+`DcEventChannel` is a multiplexer that collects events from all accounts in one place. `DcAccounts` is constructed with a `DcEventChannel`, so `DcAccounts.getEventEmitter()` returns an emitter covering all accounts simultaneously.
+
+### JSON-RPC event path
+
+When using the `Rpc` class, call `rpc.getNextEvent()` or `rpc.getNextEventBatch()` in a loop. Events arrive as typed `Event` objects whose `eventType` field is a polymorphic `EventType` subclass (e.g., `EventType.IncomingMsg`, `EventType.MsgsChanged`).
+
+### Event constants (`DC_EVENT_*`)
+
+Defined in `DcContext`, these integers identify event types in the legacy layer. Common values:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `DC_EVENT_INFO` | 100 | Informational log message |
+| `DC_EVENT_WARNING` | 300 | Warning log message |
+| `DC_EVENT_ERROR` | 400 | Error, show to user |
+| `DC_EVENT_MSGS_CHANGED` | 2000 | A message or chat changed |
+| `DC_EVENT_INCOMING_MSG` | 2005 | A fresh message arrived |
+| `DC_EVENT_MSG_DELIVERED` | 2010 | Message delivered |
+| `DC_EVENT_MSG_READ` | 2015 | Message read (MDN received) |
+| `DC_EVENT_CHAT_MODIFIED` | 2020 | Group name/image/members changed |
+| `DC_EVENT_CONTACTS_CHANGED` | 2030 | Contact added/renamed/blocked |
+| `DC_EVENT_CONFIGURE_PROGRESS` | 2041 | Account setup progress |
+| `DC_EVENT_CONNECTIVITY_CHANGED` | 2100 | Network connectivity changed |
+| `DC_EVENT_INCOMING_CALL` | 2550 | Incoming audio/video call |
+| `DC_EVENT_WEBXDC_STATUS_UPDATE` | 2120 | Webxdc app sent a status update |
+
+## The `deltachat-core-rust` submodule
+
+The Rust core lives at `jni/deltachat-core-rust` and is tracked as a Git submodule:
+
+```
+[submodule "jni/deltachat-core-rust"]
+    path = jni/deltachat-core-rust
+    url = https://github.com/chatmail/core
+```
+
+The JNI wrapper `jni/dc_wrapper.c` and the NDK makefiles `jni/Android.mk` / `jni/Application.mk` compile the core into shared libraries (`.so`) for each ABI. Use `./scripts/ndk-make.sh` to build and `./scripts/update-core.sh` to advance the submodule to a new commit or branch.
+
+## Build flavors
+
+The project defines two product flavors in `build.gradle`:
+
+<AccordionGroup>
+  <Accordion title="foss">
+    Application ID: `com.b44t.messenger`
+
+    `USE_PLAY_SERVICES = false`. No Google dependencies. Distributed through F-Droid and direct APK download from get.delta.chat.
+  </Accordion>
+  <Accordion title="gplay">
+    Application ID: `chat.delta`
+
+    `USE_PLAY_SERVICES = true`. Includes Firebase/Google Play Services for push notifications. Distributed through Google Play and Huawei AppGallery.
+  </Accordion>
+</AccordionGroup>
+
+Both flavors share all source code; conditional logic is gated on `BuildConfig.USE_PLAY_SERVICES`. When generating a release APK for stores, select the `gplayRelease` variant. For F-Droid and direct downloads, F-Droid builds `fossRelease` automatically from the tagged source.

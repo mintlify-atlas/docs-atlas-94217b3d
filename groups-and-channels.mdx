@@ -1,0 +1,106 @@
+---
+title: "Groups and Channels"
+description: "Create group chats, broadcast channels, and connect with mailing lists in Delta Chat."
+---
+
+Delta Chat supports several multi-user chat types, each suited to different communication needs.
+
+## Chat types
+
+| Type | Use case | Who can send |
+|------|----------|-------------|
+| **Group** (`DC_CHAT_TYPE_GROUP`) | Team or friend group | All members |
+| **Broadcast channel** (`DC_CHAT_TYPE_OUT_BROADCAST`) | One-to-many announcements | Channel owner only |
+| **Mailing list** (`DC_CHAT_TYPE_MAILINGLIST`) | Email mailing list integration | Subscribers |
+
+## Creating a group
+
+<Steps>
+  <Step title="Open new conversation">
+    Tap the compose button on the chat list, then choose **New Group**.
+  </Step>
+  <Step title="Add members">
+    Search for contacts by name or email address and select everyone to include.
+  </Step>
+  <Step title="Name and image">
+    Give the group a name. Optionally set a group image and description.
+  </Step>
+  <Step title="Create">
+    Tap **Create Group**. A system message is posted and all members are notified.
+  </Step>
+</Steps>
+
+<Note>
+  The person who creates the group is the initial admin. Only admins can add or remove members.
+</Note>
+
+## Managing group members
+
+- **Add member** — Open the group profile (tap the group name), tap **Add Members**, and search for contacts.
+- **Remove member** — In the group profile, tap the member's name and choose **Remove from group**.
+- **Leave group** — Open the group profile and tap **Leave Group**. You won't receive further messages.
+
+<Tip>
+  Delta Chat leaves the group gracefully before deletion — other members are notified automatically.
+</Tip>
+
+## Group admin controls
+
+Admins can:
+- Change the group name and image
+- Set a group description
+- Promote other members to admin
+- Enable disappearing messages for the whole group
+- Set up location streaming for the group
+
+## Inviting via QR code
+
+To let someone join a verified group securely:
+
+<Steps>
+  <Step title="Open group profile">
+    Tap the group name to open its profile.
+  </Step>
+  <Step title="Show QR invite code">
+    Tap **Invite via QR code** to display a scannable code (`DC_QR_ASK_VERIFYGROUP = 202`).
+  </Step>
+  <Step title="Share">
+    The new member scans it, and a cryptographic SecureJoin handshake establishes their verified membership automatically.
+  </Step>
+</Steps>
+
+You can also withdraw or revive invite links from the group profile — useful if a link was shared more widely than intended.
+
+## Broadcast channels
+
+A broadcast channel lets you send messages to a large audience without them being able to reply to the channel (they can reply privately to you).
+
+<Steps>
+  <Step title="Create a broadcast channel">
+    Tap the compose button, choose **New Broadcast Channel**, name it, and select recipients.
+  </Step>
+  <Step title="Send announcements">
+    Only you (the owner) can post. Recipients see messages in a read-only chat view.
+  </Step>
+  <Step title="Track views">
+    As the channel owner, you can see a view count on each message.
+  </Step>
+</Steps>
+
+<Info>
+  Recipients can invite other people to join a broadcast channel using its invite QR code (`DC_QR_ASK_JOIN_BROADCAST = 204`).
+</Info>
+
+## Mailing lists
+
+If you subscribe to an email mailing list, Delta Chat automatically groups those messages into a mailing list chat (`DC_CHAT_TYPE_MAILINGLIST`). You can reply directly from Delta Chat and your reply goes to the list.
+
+Mailing list chats cannot be created manually — they appear automatically when Delta Chat recognizes list headers in incoming email.
+
+## Pinning and archiving
+
+Groups and channels support the same pin and archive gestures as direct chats:
+- **Long-press** a chat in the list to pin it to the top.
+- **Swipe left** to archive a chat.
+
+Chat visibility states: `DC_CHAT_VISIBILITY_NORMAL` (0), `DC_CHAT_VISIBILITY_ARCHIVED` (1), `DC_CHAT_VISIBILITY_PINNED` (2).

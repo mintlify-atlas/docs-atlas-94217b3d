@@ -1,0 +1,70 @@
+---
+title: "Multiple Profiles"
+description: "Run multiple independent chat identities in a single Delta Chat app."
+---
+
+Delta Chat lets you maintain multiple completely separate profiles — each with its own email account, contacts, chats, and encryption keys — all within a single app.
+
+## What is a profile?
+
+A profile is a self-contained Delta Chat identity tied to one email address. Profiles are fully isolated: messages, contacts, and keys from one profile are never mixed with another.
+
+Common use cases:
+- Separate **work** and **personal** identities
+- A **private** identity using an anonymous Chatmail address
+- **Testing** with a throwaway account
+- Keeping a **family** account distinct from a professional one
+
+## Adding a new profile
+
+<Steps>
+  <Step title="Open the profile switcher">
+    Tap your avatar or profile icon in the top-left corner of the chat list to open the profile switcher.
+  </Step>
+  <Step title="Add profile">
+    Tap **Add Profile** (the "+" button) at the bottom of the switcher.
+  </Step>
+  <Step title="Set up the new profile">
+    Follow the standard [profile setup flow](/setup-profile) — either instant onboarding or connect an existing email account.
+  </Step>
+</Steps>
+
+## Switching between profiles
+
+Tap your avatar in the top-left to open the profile switcher, then tap any profile to switch to it. The app instantly loads the selected profile's chat list.
+
+<Tip>
+  You can switch profiles even while sharing or forwarding a message — Delta Chat lets you redirect to any profile mid-action.
+</Tip>
+
+## Notifications from multiple profiles
+
+Delta Chat delivers notifications for all profiles simultaneously. Each notification is clearly labelled with the profile name so you always know which account received the message.
+
+## Deleting a profile
+
+Deleting a profile permanently removes all its messages, contacts, and keys from your device.
+
+<Warning>
+  Profile deletion is protected by your device's system lock or PIN to prevent accidental data loss. Make sure you have a [backup](/backup-and-restore) before deleting.
+</Warning>
+
+<Steps>
+  <Step title="Open profile settings">
+    Switch to the profile you want to delete, then go to **Settings → Account**.
+  </Step>
+  <Step title="Delete account">
+    Tap **Delete Account** and confirm with your device PIN or biometrics.
+  </Step>
+</Steps>
+
+## Profile isolation
+
+Each profile has its own:
+- Email account and credentials
+- Encryption keys (OpenPGP)
+- Contact list and chat history
+- Notification settings
+- Webxdc apps and their state
+
+Profiles do **not** share anything with each other by design.

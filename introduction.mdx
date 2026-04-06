@@ -1,0 +1,91 @@
+---
+title: "Introduction"
+description: "Delta Chat is a decentralized, private messenger that runs over email — no central servers, no phone number required."
+---
+
+Delta Chat is a secure instant messenger for Android that uses email infrastructure to deliver messages. Instead of routing your conversations through a proprietary server controlled by a single company, Delta Chat sends and receives messages using the email system — the same open, distributed network that has connected people for decades.
+
+You keep your existing email address, choose your own provider, and chat with anyone who has an email address, whether or not they use Delta Chat.
+
+## What makes Delta Chat different
+
+<CardGroup cols={2}>
+  <Card title="No central server" icon="network-wired">
+    Messages travel through the email network. No single company sees all your conversations or controls who can communicate.
+  </Card>
+  <Card title="No phone number required" icon="user-secret">
+    Sign up with just an email address. Your phone number stays private and is never shared with contacts or servers.
+  </Card>
+  <Card title="Works with your existing email" icon="envelope">
+    Connect Delta Chat to Gmail, Outlook, Fastmail, your own server, or a Chatmail server optimized for Delta Chat.
+  </Card>
+  <Card title="Interoperable by design" icon="arrows-left-right">
+    Send messages to anyone with an email address, even if they don't have Delta Chat. They receive a normal email.
+  </Card>
+  <Card title="End-to-end encrypted" icon="lock">
+    Audited Autocrypt and OpenPGP encryption protects your messages from network and server-level attacks.
+  </Card>
+  <Card title="Fully open source" icon="code">
+    Licensed under GPLv3. The app, the core library, and the protocols are all open and auditable.
+  </Card>
+</CardGroup>
+
+## Key features
+
+### Privacy and identity
+
+Delta Chat does not require a phone number, a real name, or any personal information to get started. When you use a [Chatmail](https://chatmail.at) server for instant onboarding, you can create an account without providing anything beyond a chosen display name.
+
+Contacts can only message you if you have exchanged contact details with them — unknown senders cannot reach you without your consent, which eliminates unsolicited messages by default.
+
+### Security
+
+Delta Chat uses [Autocrypt](https://autocrypt.org) for end-to-end encryption. Keys are exchanged automatically in the background; you do not need to manage PGP keys manually. For high-security scenarios, you can verify contacts using QR codes to establish guaranteed encryption.
+
+The encryption implementation has been independently audited. Messages are encrypted before leaving your device and can only be decrypted by the intended recipient.
+
+### Flexibility
+
+You can run multiple independent chat profiles from the same app, each connected to a different email account. This makes it easy to keep personal and professional communication separate without installing multiple apps.
+
+Delta Chat also works on low-bandwidth and unreliable connections. Because it builds on email, it inherits the robustness of IMAP and SMTP — messages are delivered even when recipients are temporarily offline.
+
+### Extensibility with Webxdc
+
+Chats in Delta Chat can host [Webxdc](https://webxdc.org) apps — small, sandboxed web applications that run directly inside a conversation. These include collaborative tools like shared shopping lists, calendars, polls, and games. Webxdc apps work without internet access during use; the app itself is shared as a message attachment.
+
+## How Delta Chat compares
+
+| | Delta Chat | Signal | WhatsApp | Telegram |
+|---|---|---|---|---|
+| Infrastructure | Email network (decentralized) | Signal servers | Meta servers | Telegram servers |
+| Phone number required | No | Yes | Yes | Yes |
+| Works with existing accounts | Yes (email) | No | No | No |
+| Message recipients without the app | Yes (email fallback) | No | No | No |
+| Self-hostable | Yes | Limited | No | Partial |
+| Open source | Fully (GPLv3) | Client only | No | Client only |
+| End-to-end encrypted | Yes (Autocrypt/OpenPGP) | Yes (Signal Protocol) | Yes (Signal Protocol) | Optional (Secret Chats) |
+
+<Note>
+  Delta Chat messages sent to contacts who don't have Delta Chat are delivered as ordinary emails. This makes it a practical way to reach anyone, not just people who have installed the same app.
+</Note>
+
+## Architecture overview
+
+Delta Chat Android is built on two main components:
+
+- **[Chatmail Core](https://github.com/chatmail/core)** — a cross-platform Rust library that handles all messaging logic: IMAP/SMTP communication, encryption, contact management, and the local message database. The Android app communicates with this library over a JSON-RPC interface.
+- **Android UI** — a native Android application that provides the chat interface, onboarding flows, notifications, and media handling.
+
+This separation means the core protocol logic is shared across Delta Chat clients on iOS, desktop, and Android, while the user interface is tailored to each platform.
+
+## Get started
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Download Delta Chat from Google Play, F-Droid, or get.delta.chat. Learn about the minimum requirements and how to sideload an APK.
+  </Card>
+  <Card title="Set up your profile" icon="circle-user" href="/setup-profile">
+    Create a new account using instant onboarding or connect an existing email address. Configure your display name and avatar.
+  </Card>
+</CardGroup>

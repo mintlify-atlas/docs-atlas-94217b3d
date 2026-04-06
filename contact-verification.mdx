@@ -1,0 +1,154 @@
+---
+title: "Contact Verification"
+description: "How to verify contacts and join verified groups using QR codes and the SecureJoin protocol in Delta Chat."
+---
+
+Delta Chat lets you establish **verified contacts** — contacts whose identity you have confirmed in person or through a trusted channel. Verified contacts give you a stronger security guarantee than ordinary encrypted chats: you know that you are talking to the right person, not an impostor who happened to get hold of your contact's email address.
+
+## What verification means
+
+When you verify a contact, Delta Chat performs a cryptographic handshake (the **SecureJoin** protocol) that ties that contact's identity to a specific public key. After verification:
+
+- A **green checkmark** appears next to the verified contact's name.
+- Messages in your chat with that contact are end-to-end encrypted and the key is confirmed — not just trusted on first use.
+- If a key mismatch is detected later (for example, after a device change), Delta Chat warns you immediately.
+
+<Info>
+  Verification is optional. Regular Delta Chat chats are already end-to-end encrypted automatically. Verification adds the additional assurance that the key belongs to the person you physically met or exchanged QR codes with.
+</Info>
+
+## Verifying a contact via QR code
+
+The most common way to verify a contact is to scan each other's QR codes in person, or to share your QR code image through a trusted side channel.
+
+<Steps>
+  <Step title="Show your QR code">
+    Open Delta Chat and tap the QR code icon in the chat list header, or go to **Settings → QR Code**. Your personal invite QR code is displayed on screen.
+  </Step>
+  <Step title="Scan your contact's QR code">
+    Ask your contact to display their QR code. In Delta Chat, tap the QR scan icon and point the camera at their screen.
+
+    Alternatively, if you have a QR code image saved from your contact, tap **Load from image** to scan it without a camera.
+  </Step>
+  <Step title="Confirm the dialog">
+    Delta Chat shows a dialog asking you to confirm that you want to start a verified chat with that person (`DC_QR_ASK_VERIFYCONTACT = 200`). Tap **OK** to proceed.
+  </Step>
+  <Step title="Wait for the SecureJoin handshake">
+    Delta Chat exchanges a series of signed messages in the background to confirm the keys on both sides. This takes a few seconds. Once complete, both of you see a confirmation and the contact is marked as verified.
+  </Step>
+</Steps>
+
+<Note>
+  Both you and your contact need to be online during the SecureJoin handshake. Keep Delta Chat open and connected until the process finishes.
+</Note>
+
+## Joining a verified group via QR code
+
+A verified group is a group chat where all members have been verified against the group creator's key. To join one:
+
+<Steps>
+  <Step title="Obtain the group invite QR code">
+    Ask the group admin to show or send you the group's invite QR code. The admin generates this from inside the group chat: tap the group name at the top, then **Invite via QR Code**.
+  </Step>
+  <Step title="Scan the QR code">
+    Open Delta Chat, tap the QR scan icon, and scan the group invite code. Delta Chat recognizes this as a group invite (`DC_QR_ASK_VERIFYGROUP = 202`) and shows you the group name.
+  </Step>
+  <Step title="Confirm and join">
+    Tap **OK** in the dialog. The SecureJoin handshake runs between you and the group admin, and you are added to the group once the verification completes.
+  </Step>
+</Steps>
+
+<Warning>
+  Only the group admin can generate the invite QR code for a verified group. If you receive a group invite link from an untrusted source, inspect it carefully before joining.
+</Warning>
+
+## Fingerprint verification
+
+Each Delta Chat account has a unique cryptographic fingerprint — a long hexadecimal string that uniquely identifies the public key for that account. You can use fingerprints to verify a contact manually, without a QR code.
+
+To view a contact's fingerprint, open a chat with them, tap the contact's name at the top, and scroll to the **Encryption Info** section.
+
+When you scan a QR code that contains only a fingerprint (without an email address), Delta Chat shows the fingerprint for you to compare manually (`DC_QR_FPR_WITHOUT_ADDR`).
+
+### Fingerprint scan results
+
+| Result | Meaning |
+|--------|---------|
+| `DC_QR_FPR_OK` (210) | The scanned fingerprint matches the key you already have for this contact. The contact's key is confirmed. |
+| `DC_QR_FPR_MISMATCH` (220) | The scanned fingerprint does **not** match the key on file. This could indicate a key change or, in the worst case, an impersonation attempt. Do not proceed without clarifying this with your contact through a different channel. |
+
+<Warning>
+  A fingerprint mismatch (`DC_QR_FPR_MISMATCH`) is a serious security signal. Stop the conversation and reach out to your contact by phone or another trusted method to confirm what happened before continuing.
+</Warning>
+
+## How SecureJoin works behind the scenes
+
+SecureJoin is the cryptographic protocol Delta Chat uses to establish verified contacts and groups. When you scan a contact's QR code and confirm, the following happens:
+
+1. Your device sends a signed join request to the contact.
+2. The contact's device validates your key and replies with a signed acknowledgment.
+3. Your device validates the acknowledgment against the fingerprint from the QR code.
+4. Both devices confirm the verification is complete and record the verified status.
+
+All messages in this handshake are end-to-end encrypted and signed, so a compromised server cannot interfere with or forge the verification.
+
+<Info>
+  SecureJoin is based on the countermeasures against impersonation attacks described in research on secure group communication. Delta Chat's implementation is auditable in the open-source core library.
+</Info>
+
+## Withdrawing and revoking invite links
+
+If you have shared a QR invite code and want to stop new contacts from using it — for example, after posting it publicly by mistake — you can withdraw it.
+
+<Steps>
+  <Step title="Show the QR code screen">
+    Go to **Settings → QR Code** or open the group and tap **Invite via QR Code**.
+  </Step>
+  <Step title="Tap Withdraw">
+    Tap the **Withdraw** option (shown in red). This invalidates the current invite link (`DC_QR_WITHDRAW_VERIFYCONTACT = 500` for contacts, `DC_QR_WITHDRAW_VERIFYGROUP = 502` for groups).
+  </Step>
+  <Step title="Generate a new code if needed">
+    After withdrawing, you can generate a fresh QR code that replaces the old one. Anyone who previously saved the old code can no longer use it to join or verify.
+  </Step>
+</Steps>
+
+<Tip>
+  You can also revive (re-enable) a withdrawn invite link if you decide you want to use it again, using the revive option on the same screen.
+</Tip>
+
+## Blocked contacts
+
+If someone contacts you without your consent or sends unwanted messages, you can block them.
+
+<Steps>
+  <Step title="Open the contact's profile">
+    Tap the contact's name at the top of the chat, or find them in **Settings → Blocked Contacts**.
+  </Step>
+  <Step title="Block the contact">
+    Tap **Block Contact**. Blocked contacts cannot send you messages and do not appear in your contact list. Their messages are silently discarded.
+  </Step>
+  <Step title="Unblock if needed">
+    To unblock someone, go to **Settings → Blocked Contacts**, find the contact, and tap **Unblock**.
+  </Step>
+</Steps>
+
+<Note>
+  Blocking a contact does not delete your existing chat history. If you unblock the contact later, the chat history is still accessible.
+</Note>
+
+## Frequently asked questions
+
+<AccordionGroup>
+  <Accordion title="Do I need to verify contacts to use Delta Chat?">
+    No. Delta Chat encrypts all messages automatically using Autocrypt without any verification step. Verification is an optional additional layer for users who need stronger identity assurance.
+  </Accordion>
+  <Accordion title="What happens if a verified contact gets a new device?">
+    When a contact sets up Delta Chat on a new device, they get a new key pair. The next time you send them a message, Delta Chat may show a warning that their key has changed. To re-establish trust, verify the contact again by scanning each other's QR codes.
+  </Accordion>
+  <Accordion title="Can I verify a contact remotely without meeting in person?">
+    You can share your QR code image through a channel you trust — for example, a video call where you display the code on screen. This is less secure than an in-person scan but stronger than trusting a key with no verification at all.
+  </Accordion>
+  <Accordion title="What is the difference between a verified contact and a verified group?">
+    A verified contact means you have confirmed that specific person's key. A verified group additionally ensures that every member of the group has been verified by the group admin, and that the group membership itself is protected from tampering.
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,106 @@
+{
+  "projectType": "saas",
+  "projectName": "Delta Chat Android",
+  "projectDescription": "A decentralized, privacy-first instant messenger for Android that works over email infrastructure with end-to-end encryption, group chats, voice/video calls, and extensible in-chat apps (Webxdc).",
+  "theme": "almond",
+  "primaryColor": "#62767e",
+  "lightColor": "#b4c4c4",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "User Guide",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "setup-profile"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "messaging",
+              "groups-and-channels",
+              "calls",
+              "media-and-files"
+            ]
+          },
+          {
+            "group": "Privacy & Security",
+            "pages": [
+              "encryption",
+              "contact-verification",
+              "backup-and-restore"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "multiple-profiles",
+              "relays-and-transport",
+              "webxdc-apps",
+              "settings-reference"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Developer Guide",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "dev/overview",
+              "dev/building",
+              "dev/testing"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "dev/architecture",
+              "dev/core-bindings",
+              "dev/rpc-types"
+            ]
+          },
+          {
+            "group": "Release & Distribution",
+            "pages": [
+              "dev/releasing",
+              "dev/fdroid",
+              "dev/translations"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Decentralized messaging over email infrastructure — no central servers",
+    "End-to-end encryption (Autocrypt / OpenPGP) for all messages",
+    "Voice and video calls via WebRTC",
+    "Group chats, broadcast channels, and mailing list support",
+    "Webxdc in-chat apps (shopping lists, games, calendars, etc.)",
+    "Multiple independent chat profiles on a single device",
+    "QR-code based contact verification and device pairing",
+    "Location sharing",
+    "Ephemeral (disappearing) messages",
+    "Works with any email provider or self-hosted server"
+  ],
+  "publicApiSurface": [
+    "DcContext — core context managing messages, contacts, chats",
+    "DcAccounts — multi-account manager",
+    "DcChat — chat object (single, group, broadcast, mailing list)",
+    "DcMsg — message object with type, state, and metadata",
+    "DcContact — contact object",
+    "DcChatlist — ordered list of chats",
+    "DcEvent / DC_EVENT_* constants — event system for UI updates",
+    "Rpc (JSON-RPC) — high-level async API over deltachat-core",
+    "RPC types: Account, FullChat, Message, Contact, TransportListEntry, WebxdcMessageInfo, etc.",
+    "DcContext.DC_QR_* constants — QR code action codes",
+    "DcContext.DC_IMEX_* constants — import/export operations"
+  ]
+}

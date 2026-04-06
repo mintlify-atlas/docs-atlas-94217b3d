@@ -1,0 +1,90 @@
+---
+title: "Relays and Transport"
+description: "Manage email servers (relays) and configure transport settings for your Delta Chat profile."
+---
+
+A **relay** in Delta Chat is the email server (IMAP/SMTP) that delivers your messages. You can configure multiple relays for resilience, or use a single server like any standard email provider.
+
+## What is a relay?
+
+Every Delta Chat profile connects to at least one relay — the email server that stores and forwards your messages. This can be:
+- A **standard email provider** (Gmail, Outlook, Fastmail, etc.)
+- A **self-hosted email server**
+- A **Chatmail server** — a lightweight server optimised specifically for Delta Chat (instant delivery, no storage of message content)
+
+## Adding a relay
+
+<Tabs>
+  <Tab title="Via QR code">
+    <Steps>
+      <Step title="Open relay settings">
+        Go to **Settings → Relays** to see your relay list.
+      </Step>
+      <Step title="Scan or paste">
+        Tap **Add Relay** and scan a QR code, or paste an invite link from the clipboard. You can also add from a saved image if camera permission is not granted.
+      </Step>
+      <Step title="Confirm">
+        Delta Chat validates the relay and adds it to your list.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Manual IMAP/SMTP">
+    <Steps>
+      <Step title="Open relay settings">
+        Go to **Settings → Relays → Add Relay → Manual Setup**.
+      </Step>
+      <Step title="Enter server details">
+        Provide your IMAP host, port, and login, then your SMTP host, port, and login. Choose the TLS mode (SSL, STARTTLS, or plain).
+      </Step>
+      <Step title="Test and save">
+        Delta Chat verifies the connection and saves the relay.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Multi-relay usage
+
+You can add more than one relay to a single profile. Delta Chat uses all configured relays to send and receive messages:
+
+- **Resilience** — if one relay goes offline, messages continue to flow via the others.
+- **Smooth transitions** — when changing your primary relay, hide the old one from contacts instead of removing it. This ensures contacts who still know your old address can still reach you during the transition.
+
+<Info>
+  The connectivity screen shows the inbox quota for each relay, so you can monitor which servers are active and healthy.
+</Info>
+
+## Relay list
+
+The relay list (**Settings → Relays**) shows all configured relays with their status. Long-press a relay to reveal a context menu with options to edit, hide, or remove it.
+
+## Hiding vs. removing a relay
+
+| Action | Effect |
+|--------|--------|
+| **Hide** | The relay stays active for receiving messages but is no longer advertised in your contact info. Useful during server migrations. |
+| **Remove** | Fully disconnects and deletes the relay from your profile. |
+
+## Connectivity screen
+
+Go to **Settings → Connectivity** to see a detailed view of each relay's connection status, inbox quota, and last sync time. This screen is useful for diagnosing delivery problems.
+
+## Proxy support
+
+Delta Chat supports routing your connection through a proxy for additional privacy or to bypass network restrictions.
+
+<Steps>
+  <Step title="Open proxy settings">
+    Go to **Settings → Advanced → Proxy**.
+  </Step>
+  <Step title="Add a proxy">
+    Enter the proxy address (SOCKS5 or HTTP). You can scan a QR code that encodes a proxy configuration (`DC_QR_PROXY = 271`).
+  </Step>
+  <Step title="Enable">
+    Toggle the proxy on. All relay connections will be routed through it.
+  </Step>
+</Steps>
+
+<Warning>
+  Enabling a proxy may increase latency. The proxy toggle has been removed from the profile editing screen to reduce confusion — access it only through Advanced settings.
+</Warning>

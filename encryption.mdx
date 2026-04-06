@@ -1,0 +1,132 @@
+---
+title: "Encryption"
+description: "How Delta Chat protects your messages with automatic end-to-end encryption, metadata protection, and secure transport."
+---
+
+Delta Chat uses end-to-end encryption based on the [Autocrypt](https://autocrypt.org) standard and OpenPGP. Encryption is automatic — you do not need to manage keys, exchange certificates, or configure anything to get strong message security.
+
+## How end-to-end encryption works
+
+When you first send a message to another Delta Chat user, your app exchanges public keys automatically via the Autocrypt header embedded in outgoing messages. Once keys have been exchanged, all subsequent messages between you are encrypted end-to-end using OpenPGP.
+
+<CardGroup cols={2}>
+  <Card title="Automatic key exchange" icon="key">
+    Public keys are exchanged transparently in message headers. You never need to look up or import a contact's key manually.
+  </Card>
+  <Card title="OpenPGP standard" icon="lock">
+    Delta Chat uses the same OpenPGP format trusted by security professionals and compatible with email clients that support Autocrypt.
+  </Card>
+  <Card title="No server involvement" icon="server">
+    Encryption and decryption happen only on your device. Your email server sees only encrypted ciphertext, not your message content.
+  </Card>
+  <Card title="Forward secrecy via Autocrypt" icon="shield">
+    Autocrypt Level 1 governs key distribution, ensuring your setup stays interoperable with other Autocrypt-capable mail clients.
+  </Card>
+</CardGroup>
+
+## The padlock icon
+
+When a chat is end-to-end encrypted, a **padlock icon** appears in the chat header and next to individual messages.
+
+- A **closed padlock** means the message is end-to-end encrypted.
+- **No padlock** means the message was sent or received without end-to-end encryption.
+
+You can tap on any message and view its info to confirm encryption status for that specific message.
+
+<Note>
+  The padlock icon is driven by the `isEncrypted()` property on the chat object in the Delta Chat core library. A chat is considered encrypted only when all members have exchanged keys and all messages in that chat are protected.
+</Note>
+
+## When messages are NOT encrypted
+
+End-to-end encryption requires both sides to use a compatible client (Delta Chat or another Autocrypt-capable mail client). In some situations, messages are sent as plain email:
+
+<AccordionGroup>
+  <Accordion title="Contacting a non-Delta-Chat user for the first time">
+    If you write to an email address that has never sent an Autocrypt header, Delta Chat has no public key for that contact. The first messages are sent unencrypted. Once the other person replies from a compatible client, keys are exchanged and future messages are encrypted.
+  </Accordion>
+  <Accordion title="Mailing lists and broadcast channels">
+    Mailing lists typically do not support Autocrypt. Messages to mailing list addresses are sent as standard email and are not end-to-end encrypted.
+  </Accordion>
+  <Accordion title="Read receipts">
+    To save data and protect metadata, read receipts do not include Autocrypt headers, so they do not contribute to key exchange.
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  If you see no padlock on a conversation with someone you expected to be using Delta Chat, ask them to send you a message first — this triggers the key exchange needed to enable encryption.
+</Warning>
+
+## Metadata protection
+
+Delta Chat goes beyond encrypting message content. Metadata about your messages and contacts is also minimized:
+
+- **Recipient protection**: The list of recipients in a group message is hidden from the mail server and other recipients where possible.
+- **Date header protection**: The `Date` header in outgoing messages is protected to avoid leaking your local time.
+- **Autocrypt header protection**: The Autocrypt header (which contains your public key) is omitted from messages where it is not needed (such as read receipts), reducing fingerprinting opportunities.
+
+These protections are applied automatically and have been progressively strengthened across recent releases.
+
+## Server-side security
+
+Your messages travel over email infrastructure, but Delta Chat keeps them safe even on the server:
+
+- Messages stored on the server are **encrypted ciphertext**. Without your private key, the server operator cannot read your messages.
+- Delta Chat uses **TLS for transport** between your device and the mail server, preventing interception in transit.
+
+### TLS transport modes
+
+Delta Chat supports three transport security modes when connecting to your mail server:
+
+| Mode | Description |
+|------|-------------|
+| `SSL/TLS` (`DC_SOCKET_SSL`) | A TLS-encrypted connection is established from the start. This is the recommended and most widely supported mode. |
+| `STARTTLS` (`DC_SOCKET_STARTTLS`) | The connection begins unencrypted, then upgrades to TLS using the STARTTLS command. |
+| `Plain` (`DC_SOCKET_PLAIN`) | No transport encryption. Only use this for local testing — never on a real server. |
+
+Delta Chat also supports `DC_SOCKET_AUTO`, which selects the best available option automatically during account setup.
+
+<Warning>
+  Never use plain (unencrypted) transport on a real email account. Always prefer SSL/TLS or STARTTLS.
+</Warning>
+
+## Exporting and importing your keys
+
+Your OpenPGP private key is generated locally and never leaves your device in plaintext. You can export it for safekeeping or to move it to another client.
+
+<Tabs>
+  <Tab title="Export keys">
+    <Steps>
+      <Step title="Open Settings">
+        Go to **Settings → Advanced**.
+      </Step>
+      <Step title="Export secret keys">
+        Tap **Export Secret Keys**. Delta Chat writes your private key files to the `Downloads` folder on your device.
+      </Step>
+      <Step title="Store securely">
+        Move the exported key files to an encrypted location such as a password manager or an encrypted drive. Do not share these files.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Import keys">
+    <Steps>
+      <Step title="Open Settings">
+        Go to **Settings → Advanced**.
+      </Step>
+      <Step title="Import secret keys">
+        Tap **Import Secret Keys** and select the key file from your device storage. Delta Chat reads all `.asc` key files from the selected folder (uses `DC_IMEX_IMPORT_SELF_KEYS` internally).
+      </Step>
+      <Step title="Confirm">
+        A confirmation message tells you how many keys were imported. Your contacts will recognize messages signed with the imported key.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Tip>
+  If you are moving to a new device, the easiest approach is to use the **Add Second Device** QR-code transfer, which copies everything — including your keys — automatically. See [Backup and Restore](/backup-and-restore) for details.
+</Tip>
+
+## Local database encryption
+
+Delta Chat encrypts its local message database using a key derived from a secret stored in the Android KeyStore (AES-256-GCM). This means your message history is protected at rest on your device, tied to the device's hardware security module on Android 6.0 and later.

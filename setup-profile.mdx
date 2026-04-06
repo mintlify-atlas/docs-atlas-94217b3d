@@ -1,0 +1,246 @@
+---
+title: "Set Up Your Profile"
+description: "Create a new Delta Chat account using instant onboarding or connect an existing email address. Configure your display name, avatar, and advanced email settings."
+---
+
+When you first open Delta Chat, you are guided through a setup flow to connect the app to an email account. You can create a new account in seconds using instant onboarding, or connect an existing email address you already own.
+
+## Choosing an approach
+
+<Tabs>
+  <Tab title="Instant onboarding (recommended)">
+    Instant onboarding creates a new email address for you on a [Chatmail](https://chatmail.at) server — a mail server optimized specifically for Delta Chat. This is the fastest way to get started and requires no prior configuration.
+
+    You only need to enter a display name. Delta Chat handles everything else automatically.
+
+    **Best for:** New users who want to start chatting immediately without managing email settings.
+  </Tab>
+  <Tab title="Existing email address">
+    Connect Delta Chat to an email account you already have — Gmail, Outlook, Fastmail, a self-hosted server, or any IMAP/SMTP provider.
+
+    You will need your email address, password, and in some cases your IMAP and SMTP server details.
+
+    **Best for:** Users who want to use an existing identity, chat with non-Delta Chat contacts via email, or run their own mail server.
+  </Tab>
+  <Tab title="Second device / restore">
+    If you already use Delta Chat on another device, you can add your existing profile to this device by scanning a QR code from the original device, or by restoring from a backup file.
+
+    **Best for:** Users who already have a Delta Chat account and want to use it on an additional device.
+  </Tab>
+</Tabs>
+
+## Create a new profile with instant onboarding
+
+<Steps>
+  <Step title="Open Delta Chat and tap 'Create account'">
+    When you first launch the app, the welcome screen shows two options: **Create account** and **More sign-in options**. Tap **Create account** to start instant onboarding.
+  </Step>
+  <Step title="Enter your display name">
+    Type the name you want contacts to see when you message them. This does not have to be your real name — you can use a nickname or any identifier you prefer.
+
+    <Info>
+      Your display name is stored in your profile and shared with contacts when you chat with them. You can change it at any time from **Settings** > **My profile**.
+    </Info>
+  </Step>
+  <Step title="Optionally add a profile photo">
+    Tap the camera icon to set an avatar. You can choose an image from your gallery, take a photo, or skip this step and add one later.
+  </Step>
+  <Step title="Tap 'Create account'">
+    Delta Chat connects to the default Chatmail server (`nine.testrun.org`) and creates an account automatically. A progress indicator shows as the account is configured. This typically takes a few seconds.
+  </Step>
+  <Step title="Start chatting">
+    Once the account is created, you land on the chat list. You are ready to send your first message.
+  </Step>
+</Steps>
+
+<Note>
+  Chatmail accounts are private by design. Your account is created without providing a phone number or any personal data. The server only stores message data needed for delivery.
+</Note>
+
+### Choosing a different Chatmail server
+
+The default server (`nine.testrun.org`) is operated by the Delta Chat development team. If you prefer a different Chatmail server, tap **Other options** on the instant onboarding screen. You can:
+
+- Scan a QR code from a Chatmail server operator
+- Browse the list of available servers at [chatmail.at/relays](https://chatmail.at/relays)
+
+All Chatmail servers interoperate — you can message users on any Chatmail server from any other.
+
+## Connect an existing email address
+
+<Steps>
+  <Step title="Tap 'More sign-in options' on the welcome screen">
+    From the welcome screen, tap **More sign-in options**. A dialog appears with two choices: **Add as second device** (QR scan) and **Restore from backup**. For an existing email, you will configure it through the manual setup flow — tap **More sign-in options** and then choose the manual login option.
+
+    <Info>
+      If you are starting from scratch with an existing email, tap **Create account** on the welcome screen first. On the instant onboarding screen, tap **Other options** > **Use my own account (IMAP/SMTP)** to open the manual configuration form.
+    </Info>
+  </Step>
+  <Step title="Enter your email address and password">
+    Type your full email address and the account password. Delta Chat attempts to auto-detect the correct IMAP and SMTP settings using the provider's published configuration.
+
+    For most major providers (Gmail, Outlook, Yahoo, Fastmail), auto-detection succeeds without any additional input.
+  </Step>
+  <Step title="Grant app-specific password if required">
+    Some providers — including Gmail with 2-factor authentication enabled — require an app-specific password rather than your regular account password. Generate one from your provider's security settings and use it here instead of your main password.
+  </Step>
+  <Step title="Tap 'Login' and wait for verification">
+    Delta Chat connects to your mail server and verifies the credentials. A progress indicator shows the connection status. If the login fails, an error message explains what went wrong.
+  </Step>
+  <Step title="Set your display name and avatar">
+    After a successful login, you are prompted to complete your profile with a display name and optional avatar.
+  </Step>
+</Steps>
+
+## Configure IMAP/SMTP manually
+
+If auto-detection fails, or if you want to specify server settings explicitly, you can enter them manually.
+
+<Steps>
+  <Step title="Open the advanced settings">
+    On the login screen, tap **Advanced** to reveal the manual configuration fields.
+  </Step>
+  <Step title="Enter IMAP settings">
+    | Field | Example |
+    |---|---|
+    | IMAP server | `imap.example.com` |
+    | IMAP port | `993` (STARTTLS) or `143` |
+    | Security | TLS/SSL or STARTTLS |
+    | IMAP login | Your full email address or username |
+  </Step>
+  <Step title="Enter SMTP settings">
+    | Field | Example |
+    |---|---|
+    | SMTP server | `smtp.example.com` |
+    | SMTP port | `465` (TLS) or `587` (STARTTLS) |
+    | Security | TLS/SSL or STARTTLS |
+    | SMTP login | Your full email address or username |
+  </Step>
+  <Step title="Tap 'Login'">
+    Delta Chat connects using the provided settings. If the connection succeeds, you proceed to the profile setup screen.
+  </Step>
+</Steps>
+
+<Warning>
+  Always use TLS or STARTTLS encryption for your IMAP and SMTP connections. Unencrypted connections expose your credentials and message metadata on the network.
+</Warning>
+
+### Provider-specific notes
+
+<AccordionGroup>
+  <Accordion title="Gmail">
+    Gmail requires an app-specific password if your account has 2-step verification enabled. Go to your Google Account > **Security** > **App passwords**, generate a password for "Mail" on "Android device", and use that password in Delta Chat.
+
+    If you see an authentication error with your regular password, this is almost always the cause.
+  </Accordion>
+  <Accordion title="Outlook and Hotmail">
+    Microsoft accounts use OAuth for authentication in modern clients. If Delta Chat fails to connect with your regular password, generate an app password from your Microsoft account security settings.
+
+    IMAP must be enabled in your Outlook settings: **Settings** > **Mail** > **Sync email** > enable IMAP.
+  </Accordion>
+  <Accordion title="Self-hosted servers">
+    If you run your own mail server (Postfix, Dovecot, Mailcow, etc.), use the FQDN of your server and ensure IMAP and SMTP ports are accessible. Delta Chat communicates using standard protocols — no special server-side configuration is needed beyond standard IMAP/SMTP with STARTTLS or TLS.
+  </Accordion>
+</AccordionGroup>
+
+## Set your display name and avatar
+
+Your display name and profile photo are visible to people you chat with. You can set or change them at any time:
+
+<Steps>
+  <Step title="Open Settings">
+    Tap the three-dot menu in the top-right corner of the chat list and select **Settings**.
+  </Step>
+  <Step title="Tap your profile">
+    At the top of the settings screen, tap your name or the profile image area to open the profile editor.
+  </Step>
+  <Step title="Update your display name">
+    Type your preferred display name in the name field. This is required — Delta Chat will not save the profile without a name.
+  </Step>
+  <Step title="Add or change your avatar">
+    Tap the profile photo area to open the avatar selector. You can:
+    - Choose an existing image from your gallery
+    - Take a new photo with your camera
+    - Remove the current photo
+  </Step>
+  <Step title="Add a status message (optional)">
+    You can enter a short status text that appears below your name in your contact's view of your profile.
+  </Step>
+  <Step title="Save changes">
+    Tap the checkmark or **Save** button. Changes are applied immediately and shared with contacts in your next message exchange.
+  </Step>
+</Steps>
+
+## Add Delta Chat to a second device
+
+If you already have Delta Chat configured on one device, you can transfer your account to an additional device without re-entering your email credentials.
+
+<Steps>
+  <Step title="On the existing device, open Settings > Add second device">
+    Go to **Settings** > **Add second device**. Delta Chat displays a QR code.
+  </Step>
+  <Step title="On the new device, open the welcome screen">
+    Install Delta Chat on the new device and open it. On the welcome screen, tap **More sign-in options**.
+  </Step>
+  <Step title="Tap 'Add as second device' and scan the QR code">
+    Tap **Add as second device** in the dialog. Grant camera permission when prompted. Scan the QR code displayed on your existing device.
+  </Step>
+  <Step title="Wait for the transfer to complete">
+    Delta Chat transfers your account credentials and recent message history securely over a local Wi-Fi connection. Both devices must be on the same network during the transfer. A progress bar shows the transfer status.
+  </Step>
+</Steps>
+
+<Tip>
+  The QR-based device transfer is encrypted end-to-end. Your credentials never pass through any server during this process — the data moves directly between your two devices.
+</Tip>
+
+## Restore from a backup file
+
+If you have a Delta Chat backup file (`.tar` format), you can restore it on a new device:
+
+<Steps>
+  <Step title="Copy the backup file to your device">
+    Transfer the backup file to your device's Downloads folder via USB, a file sharing app, or cloud storage.
+  </Step>
+  <Step title="On the welcome screen, tap 'More sign-in options'">
+    In the dialog that appears, tap **Restore from backup**.
+  </Step>
+  <Step title="Select the backup file">
+    A file picker opens. Navigate to your Downloads folder and select the `.tar` backup file.
+  </Step>
+  <Step title="Wait for the restore to complete">
+    Delta Chat imports the backup, restoring your account credentials, contacts, and message history. This may take a minute or two for large backups.
+  </Step>
+</Steps>
+
+## Choosing an email provider
+
+If you are setting up Delta Chat with an existing email address or want to choose a dedicated provider, keep these factors in mind:
+
+<AccordionGroup>
+  <Accordion title="Chatmail servers (recommended for Delta Chat)">
+    Chatmail servers are purpose-built for Delta Chat. They deliver messages with minimal latency, support push notifications, and are optimized for high message throughput. They work well for users who want the best Delta Chat experience without managing their own infrastructure.
+
+    Browse available servers at [chatmail.at/relays](https://chatmail.at/relays). All listed servers meet baseline privacy and reliability requirements.
+  </Accordion>
+  <Accordion title="Privacy-focused email providers">
+    Providers like Posteo, Mailbox.org, Tutanota (via IMAP bridge), and Fastmail offer strong privacy policies and support standard IMAP/SMTP. These are good choices if you want an email address you can also use independently of Delta Chat.
+  </Accordion>
+  <Accordion title="Self-hosted mail servers">
+    Running your own mail server gives you complete control over your data. Delta Chat works with any standard IMAP/SMTP server. Tools like Mailcow, Mailu, and Mail-in-a-Box simplify self-hosting.
+  </Accordion>
+  <Accordion title="Gmail and Outlook">
+    Delta Chat works with Gmail and Outlook, but both providers may introduce message delivery delays and require extra configuration (app-specific passwords, IMAP enabling). They are suitable if you already have an account you want to use, but are not ideal for Delta Chat as a primary messenger.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Messaging" icon="message" href="/messaging">
+    Send your first message, share media, and learn how chats work in Delta Chat.
+  </Card>
+  <Card title="Encryption" icon="lock" href="/encryption">
+    Understand how Delta Chat encrypts your messages and how to verify contacts.
+  </Card>
+</CardGroup>

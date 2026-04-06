@@ -1,0 +1,140 @@
+---
+title: "Testing"
+description: "How to run UI tests, benchmarks, and decode native crash reports for Delta Chat Android."
+---
+
+Delta Chat Android uses [Android Instrumented Tests](https://developer.android.com/training/testing/instrumented-tests) driven by Espresso. The test suite lives in `src/androidTest/` and includes both offline UI tests and online tests that connect to a real email account.
+
+## Prerequisites
+
+You do not need a dedicated test device. An emulator or your daily-use device works. If you run tests on your own device, **back up your Delta Chat account first** — the test suite creates and removes accounts and may interfere with your existing data.
+
+You need at least **Android 9 (API 28)** to run the tests. For meaningful benchmark numbers, use a real physical device and make sure the native library was compiled in release mode (`scripts/ndk-make.sh` without `--debug`).
+
+## Disabling animations
+
+<Warning>
+  You must disable animations on the test device before running UI tests. Animations cause Espresso to time out waiting for the UI to settle, and tests will fail intermittently or consistently without this step.
+</Warning>
+
+In **Developer options** on the device, set all three of the following to **0x**:
+
+- Window animation scale
+- Transition animation scale
+- Animator duration scale
+
+Developer options are accessible at **Settings → About phone → tap "Build number" seven times** if they are not already visible.
+
+## Running tests in Android Studio
+
+<Steps>
+  <Step title="Sync the project">
+    In Android Studio, choose **File → Sync project with Gradle files**. This ensures the test configuration reflects the current `build.gradle`.
+  </Step>
+
+  <Step title="Create a run configuration">
+    Go to **Run → Edit configurations → + → Android Instrumented test**.
+
+    - To run a single test class, select it from the list.
+    - To run everything, choose **All in Module**.
+
+    Click **OK**.
+  </Step>
+
+  <Step title="Run the tests">
+    Select your new configuration in the toolbar, then click the green **Run** button. Android Studio installs the test APK on the connected device or emulator and streams results to the Run panel.
+  </Step>
+</Steps>
+
+## Test categories
+
+The test suite is organized into three packages under `src/androidTest/java/com/b44t/messenger/`:
+
+| Package | Description |
+|---|---|
+| `uitests/offline/` | UI tests that run without network access (e.g., forwarding, sharing) |
+| `uitests/online/` | Tests that connect to a real email account (e.g., account creation, onboarding) |
+| `uibenchmarks/` | Performance benchmarks for measuring chat list rendering time |
+
+## Online tests
+
+Some tests verify end-to-end flows against a real email server. They require credentials for an actual email account.
+
+<Warning>
+  Do not use your personal email account for tests. Use a dedicated test account.
+</Warning>
+
+You have two ways to supply the credentials:
+
+<Tabs>
+  <Tab title="gradle.properties (recommended)">
+    Add the credentials to `~/.gradle/gradle.properties`, creating the file if it doesn't exist:
+
+    ```properties
+    TEST_ADDR=youraccount@yourdomain.org
+    TEST_MAIL_PW=yourpassword
+    ```
+
+    Gradle reads this file automatically during the build. The values are embedded into `BuildConfig` via `buildConfigField` in `build.gradle`.
+  </Tab>
+
+  <Tab title="Environment variables">
+    Export the variables in your shell before running the build or test:
+
+    ```bash
+    export TEST_ADDR=youraccount@yourdomain.org
+    export TEST_MAIL_PW=yourpassword
+    ./gradlew connectedAndroidTest
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  If `TEST_ADDR` or `TEST_MAIL_PW` are empty, online tests throw a `RuntimeException` immediately with an explanation. Offline tests are not affected.
+</Note>
+
+## Benchmarks
+
+Benchmarks are located in `src/androidTest/java/com/b44t/messenger/uibenchmarks/`. They measure chat list traversal time and are annotated with `@Ignore` by default so they don't run as part of the regular test suite.
+
+To run a benchmark, remove the `@Ignore` annotation from the relevant class (e.g., `EnterChatsBenchmark`), then run it through Android Studio or Gradle as a normal instrumented test.
+
+### Reading benchmark results
+
+When a benchmark completes, it logs a result line to logcat in this format:
+
+```
+MEASURED RESULTS (Benchmark) - Going thorough all 10 chats: 11635,11207,11363,11352,11279,11183,11137,11145,11032,11057
+```
+
+To analyze the numbers, paste the comma-separated values into a LibreOffice Calc cell, then use **Data → Text to Columns**, select `,` as the separator, and click **OK**. You can then create a chart from the resulting columns.
+
+<Tip>
+  For stable benchmark numbers, run on a physical device, keep it plugged in, and close other apps. Emulator benchmarks reflect host machine performance and vary significantly between runs.
+</Tip>
+
+## Decoding native crash reports
+
+Crashes in the native library (`libdeltachat`) produce stack traces with raw addresses. To decode them into human-readable symbols, use `ndk-stack`:
+
+```bash
+$ANDROID_NDK_ROOT/ndk-stack \
+  --sym obj/local/armeabi-v7a \
+  --dump crash.txt \
+  > decoded.txt
+```
+
+The `obj/local/armeabi-v7a` path refers to the symbols directory extracted from the symbols archive (`deltachat-gplay-release-X.X.X.apk-symbols.zip`) available at [download.delta.chat/android/symbols/](https://download.delta.chat/android/symbols/).
+
+Replace `armeabi-v7a` with the ABI of the crashing device. If you are unsure, try each in turn:
+
+| ABI value | Architecture |
+|---|---|
+| `armeabi-v7a` | 32-bit ARM |
+| `arm64-v8a` | 64-bit ARM (most modern phones) |
+| `x86` | 32-bit x86 |
+| `x86_64` | 64-bit x86 |
+
+<Tip>
+  Run `adb shell uname -m` on a connected device to determine its architecture, or check an app like [CPU Info](https://f-droid.org/packages/com.kgurgul.cpuinfo/).
+</Tip>

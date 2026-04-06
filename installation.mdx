@@ -1,0 +1,147 @@
+---
+title: "Installation"
+description: "Download Delta Chat for Android from Google Play, F-Droid, or get.delta.chat. Requires Android 7.1 (API 25) or later."
+---
+
+Delta Chat for Android is available through several distribution channels. Choose the one that best fits your needs.
+
+## Download options
+
+<CardGroup cols={2}>
+  <Card title="Google Play" icon="google-play" href="https://play.google.com/store/apps/details?id=chat.delta">
+    The easiest way to install on most Android devices. Automatic updates through the Play Store.
+  </Card>
+  <Card title="F-Droid" icon="shield" href="https://f-droid.org/app/com.b44t.messenger">
+    A fully open source app store with no proprietary components. Recommended for privacy-conscious users.
+  </Card>
+  <Card title="get.delta.chat" icon="globe" href="https://get.delta.chat">
+    Direct APK downloads and builds for other platforms. Use this if you want a specific version or want to sideload.
+  </Card>
+  <Card title="GitHub Releases" icon="github" href="https://github.com/deltachat/deltachat-android/releases">
+    Tagged release APKs alongside release notes and changelogs.
+  </Card>
+</CardGroup>
+
+<Tip>
+  If you are unsure which option to choose, install from **Google Play** for convenience or **F-Droid** for a fully open-source installation without any Google services dependency.
+</Tip>
+
+## System requirements
+
+- **Android version**: 7.1 Nougat (API level 25) or later
+- **Architecture**: ARM (32-bit and 64-bit), x86_64
+- **Storage**: At least 100 MB free for the app; additional space needed for message attachments and backups
+
+<Note>
+  The app is distributed in two build variants: `gplay` (with push notification support via Google services) and `fat` (a standalone build with no Google dependencies). F-Droid and get.delta.chat distribute the `fat` variant.
+</Note>
+
+## Permissions
+
+Delta Chat requests the following permissions. All permissions marked as optional are only used for specific features — the app works for basic messaging without them.
+
+### Required for messaging
+
+| Permission | Why it's needed |
+|---|---|
+| `INTERNET` | Send and receive messages over IMAP/SMTP |
+| `ACCESS_NETWORK_STATE` | Detect when the network is available to schedule message sync |
+| `RECEIVE_BOOT_COMPLETED` | Restart background message sync after the device reboots |
+| `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_DATA_SYNC` | Keep the message sync service running reliably in the background |
+| `WAKE_LOCK` | Prevent the CPU from sleeping during active message delivery |
+
+### Notifications
+
+| Permission | Why it's needed |
+|---|---|
+| `POST_NOTIFICATIONS` | Show message and call notifications (Android 13+, prompted on first setup) |
+| `VIBRATE` | Vibrate for incoming message notifications |
+
+### Media and files
+
+| Permission | Why it's needed |
+|---|---|
+| `CAMERA` | Take photos and scan QR codes for contact verification |
+| `READ_MEDIA_IMAGES` / `READ_MEDIA_VIDEO` | Attach images and videos from your gallery |
+| `READ_EXTERNAL_STORAGE` (up to Android 12) | Import backup files from storage |
+| `WRITE_EXTERNAL_STORAGE` (up to Android 9) | Save received files to external storage |
+
+### Audio and calls
+
+| Permission | Why it's needed |
+|---|---|
+| `RECORD_AUDIO` | Send voice messages and participate in audio/video calls |
+| `MODIFY_AUDIO_SETTINGS` | Manage audio routing during calls (speaker, earpiece) |
+| `BLUETOOTH_CONNECT` | Use Bluetooth headsets and earphones during calls |
+| `MANAGE_OWN_CALLS` | Integrate with the Android telecom framework for call handling |
+
+### Location (optional)
+
+| Permission | Why it's needed |
+|---|---|
+| `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` | Share your live location in a chat |
+| `ACCESS_BACKGROUND_LOCATION` | Continue sharing location when the app is not in the foreground |
+
+<Warning>
+  Location permissions are only used when you explicitly choose to share your location in a chat. Delta Chat never accesses your location for any other purpose.
+</Warning>
+
+### Other
+
+| Permission | Why it's needed |
+|---|---|
+| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Ask Android to exempt Delta Chat from battery optimization so messages are delivered promptly |
+| `INSTALL_SHORTCUT` | Create a chat shortcut on the home screen |
+
+## Sideloading an APK
+
+If you want to install a specific version, a beta build, or the app on a device without Google Play, you can sideload an APK manually.
+
+<Steps>
+  <Step title="Enable installation from unknown sources">
+    On Android 8.0 and later, go to **Settings** > **Apps** > find your browser or file manager > enable **Install unknown apps**.
+
+    On older versions, go to **Settings** > **Security** and enable **Unknown sources**.
+  </Step>
+  <Step title="Download the APK">
+    Visit [get.delta.chat](https://get.delta.chat) or the [GitHub releases page](https://github.com/deltachat/deltachat-android/releases) and download the APK file for your device.
+
+    For most Android devices, download the `arm64` build. If you are unsure, the `fat` APK supports all common architectures.
+  </Step>
+  <Step title="Open the APK file">
+    Open your file manager, navigate to your downloads folder, and tap the `.apk` file. Android will prompt you to confirm the installation.
+  </Step>
+  <Step title="Confirm the installation">
+    Tap **Install** when prompted. Android may warn you that the app is from an unknown source — this is expected for sideloaded apps.
+  </Step>
+  <Step title="Open Delta Chat">
+    After installation completes, tap **Open** or find Delta Chat in your app drawer. Proceed to [set up your profile](/setup-profile).
+  </Step>
+</Steps>
+
+<Info>
+  When sideloading, you are responsible for keeping the app up to date. Check the [releases page](https://github.com/deltachat/deltachat-android/releases) periodically or switch to F-Droid for automatic update management without Google services.
+</Info>
+
+## Battery optimization
+
+Android's battery optimization can delay or prevent background message delivery. After installation, Delta Chat may ask you to exempt it from battery optimization. Granting this request ensures you receive messages promptly, especially when the screen is off.
+
+To check or change this setting manually:
+
+1. Go to **Settings** > **Apps** > **Delta Chat**
+2. Tap **Battery**
+3. Select **Unrestricted** or **Don't optimize**
+
+The exact menu labels vary by Android version and device manufacturer.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Set up your profile" icon="circle-user" href="/setup-profile">
+    Create a new account or connect an existing email address to start chatting.
+  </Card>
+  <Card title="Introduction" icon="book-open" href="/introduction">
+    Learn how Delta Chat works and how it compares to other messengers.
+  </Card>
+</CardGroup>

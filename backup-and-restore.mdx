@@ -1,0 +1,163 @@
+---
+title: "Backup and Restore"
+description: "How to back up your Delta Chat data, restore from a backup file, and transfer your account to a new device using a QR code."
+---
+
+Delta Chat stores your messages, contacts, settings, and encryption keys locally on your device. Creating regular backups protects this data in case you lose your device, switch phones, or need to reinstall the app.
+
+## What is included in a backup
+
+A Delta Chat backup is a single `.tar` file that contains:
+
+- All your messages and attachments
+- Your contacts and their metadata
+- Group memberships and group settings
+- Your OpenPGP private and public keys
+- Account configuration (server settings, display name, etc.)
+- App preferences and chat settings
+
+<Note>
+  Because the backup contains your private encryption keys, anyone who obtains the backup file can read your messages and impersonate you. Treat it with the same care as a password.
+</Note>
+
+## Creating a backup
+
+<Steps>
+  <Step title="Open Settings">
+    In Delta Chat, tap the hamburger menu or go to **Settings**.
+  </Step>
+  <Step title="Navigate to Chats and Media">
+    Tap **Chats and Media** (or **Advanced** depending on your version).
+  </Step>
+  <Step title="Tap Create Backup">
+    Tap **Create Backup**. If you have screen lock enabled, Delta Chat will ask you to authenticate first.
+  </Step>
+  <Step title="Choose scope (if you use multiple profiles)">
+    If you have more than one Delta Chat profile, you can choose to back up only the current profile or all profiles at once.
+  </Step>
+  <Step title="Wait for the export to finish">
+    Delta Chat writes the backup file to your device's **Downloads** folder. A progress indicator is shown. Do not close the app until the export completes.
+  </Step>
+  <Step title="Move the file to a safe location">
+    Once the backup is written, copy or move it to secure storage: an encrypted cloud service, an external drive, or a password manager that supports file attachments.
+  </Step>
+</Steps>
+
+The backup file is named with a timestamp and saved to `Downloads/` on your internal storage (the path returned by `Environment.DIRECTORY_DOWNLOADS`). The file uses the `.tar` extension (MIME type `application/x-tar`).
+
+<Tip>
+  On Android 11 and later, you can use the system file picker to choose exactly where to save your backup file, making it easier to send it directly to cloud storage.
+</Tip>
+
+## Restoring from a backup
+
+Restore a backup when setting up Delta Chat on the same or a different device from scratch.
+
+<Steps>
+  <Step title="Install Delta Chat">
+    Install Delta Chat on the device where you want to restore. Open the app and reach the welcome screen (do not create or log in to an account yet).
+  </Step>
+  <Step title="Tap Restore Backup">
+    On the welcome screen, tap **Restore Backup** (or **Import Backup**).
+  </Step>
+  <Step title="Locate your backup file">
+    On Android 11 and later, a file picker opens — navigate to your backup `.tar` file and select it. On older Android versions, Delta Chat looks for backup files in the `Downloads` folder automatically and prompts you if one is found.
+  </Step>
+  <Step title="Wait for the import to complete">
+    Delta Chat imports your messages, settings, and keys. This may take a minute or two depending on how much data you have. Do not close the app during this process.
+  </Step>
+  <Step title="Resume normally">
+    Once the import finishes, Delta Chat restarts and logs you in automatically using the restored account settings.
+  </Step>
+</Steps>
+
+<Warning>
+  Restoring a backup on a device that already has a Delta Chat account configured will replace the existing account data. Make sure you have a backup of that account too before proceeding.
+</Warning>
+
+## Transferring to a new device via QR code
+
+If both your old and new devices are available and on the same Wi-Fi network, you can transfer your entire account wirelessly using a QR code. This is the easiest and most reliable way to move to a new phone.
+
+<CardGroup cols={2}>
+  <Card title="No cable needed" icon="wifi">
+    Transfer happens entirely over your local Wi-Fi network. No USB cable, cloud account, or third-party service required.
+  </Card>
+  <Card title="Everything included" icon="copy">
+    The transfer copies messages, contacts, keys, and settings — identical to a backup restore, but automated.
+  </Card>
+  <Card title="Encrypted in transit" icon="lock">
+    The data stream between devices is encrypted. The QR code contains the credentials needed to initiate the secure channel.
+  </Card>
+  <Card title="One-time code" icon="rotate-right">
+    The QR code is valid for a single transfer session. It is invalidated once the transfer starts or if you abort.
+  </Card>
+</CardGroup>
+
+### How to transfer
+
+<Tabs>
+  <Tab title="On the old device (sender)">
+    <Steps>
+      <Step title="Open Settings">
+        Go to **Settings → Add Second Device** (or **Backup → Transfer to another device**).
+      </Step>
+      <Step title="Display the QR code">
+        Delta Chat prepares the transfer and displays a QR code on screen. Keep this screen open and the app in the foreground. The app shows your current Wi-Fi network name so you can confirm both devices are on the same network.
+      </Step>
+      <Step title="Wait for the receiver to connect">
+        Once the new device scans the QR code and you confirm on the new device, the transfer starts automatically. A progress bar shows how much data has been sent.
+      </Step>
+      <Step title="Transfer complete">
+        When the progress reaches 100%, both devices show a success message. You can now use Delta Chat on the new device.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="On the new device (receiver)">
+    <Steps>
+      <Step title="Open Delta Chat">
+        Install and open Delta Chat. On the welcome screen, tap **Add as Second Device** or **Scan QR Code**.
+      </Step>
+      <Step title="Scan the QR code">
+        Point your camera at the QR code displayed on the old device. Delta Chat detects this as a device transfer code (`DC_QR_BACKUP2 = 252`) and shows a confirmation dialog.
+      </Step>
+      <Step title="Confirm and connect">
+        The dialog confirms the transfer and shows the Wi-Fi network name. Make sure both devices are on the same network, then tap **Continue**.
+      </Step>
+      <Step title="Wait for the transfer">
+        Delta Chat receives the account data from the old device over the local network. A progress bar shows how much has been received. Keep the app open until the transfer finishes.
+      </Step>
+      <Step title="All done">
+        Once the transfer completes, Delta Chat opens your chat list automatically.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Warning>
+  Both devices must be connected to the **same Wi-Fi network** for the transfer to work. The transfer does not work over mobile data or across different networks.
+</Warning>
+
+<Info>
+  If the new device's Delta Chat version is significantly older than the old device, you may see an error indicating the backup format is too new (`DC_QR_BACKUP_TOO_NEW = 255`). Update Delta Chat on the new device and try again.
+</Info>
+
+## Tips for keeping your backups safe
+
+<AccordionGroup>
+  <Accordion title="Encrypt your backup file">
+    The backup file itself is not encrypted by default — it is a plain `.tar` archive. Before storing it in the cloud or sending it anywhere, encrypt it with a strong tool such as 7-Zip (AES-256), GPG, or your OS's built-in encryption. A password manager with file attachment support is a convenient option.
+  </Accordion>
+  <Accordion title="Back up regularly">
+    Create a new backup whenever you have important conversations you want to preserve. A backup from last month does not include messages sent or received since then.
+  </Accordion>
+  <Accordion title="Test your backup">
+    Periodically verify that your backup can actually be restored. Install Delta Chat on a secondary device or in an emulator and import the backup to confirm it is not corrupted.
+  </Accordion>
+  <Accordion title="Store backups in more than one place">
+    Keep copies in at least two separate locations — for example, an encrypted USB drive and an encrypted cloud folder. A single backup copy is itself a single point of failure.
+  </Accordion>
+  <Accordion title="Delete old backup files securely">
+    When you create a new backup, delete the old one securely. Old backups still contain your private keys and message history and should not be left lying around.
+  </Accordion>
+</AccordionGroup>

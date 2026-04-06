@@ -1,0 +1,307 @@
+---
+title: "Building the App"
+description: "How to set up a build environment and compile Delta Chat Android from source."
+---
+
+Delta Chat Android uses a hybrid build: Gradle handles the Java/Android layer, while the native [deltachat-core-rust](https://github.com/deltachat/deltachat-core-rust) library is cross-compiled for Android with the NDK and then linked in via JNI.
+
+You need to do three things before you have a working APK:
+
+1. Check out the repository including its submodules
+2. Generate the JSON-RPC bindings
+3. Build the native library and then the APK
+
+## Checking out the repository
+
+Always clone with `--recursive` to include the `deltachat-core-rust` submodule:
+
+```bash
+git clone --recursive https://github.com/deltachat/deltachat-android
+```
+
+If you already cloned without `--recursive`:
+
+```bash
+git submodule update --init --recursive
+```
+
+## Generating JSON-RPC bindings
+
+The `chat.delta.rpc.*` package is auto-generated from the core. Before building for the first time (or after updating the core submodule), regenerate the bindings:
+
+```bash
+./scripts/update-rpc-bindings.sh
+```
+
+This requires Rust tooling to be available. If you are using the Nix environment described below, Rust is already included. If you are setting up manually, install the [dcrpcgen tool](https://github.com/chatmail/dcrpcgen) first.
+
+## Build environment
+
+Three approaches are supported. Nix is the most reproducible and requires the least manual setup.
+
+<Tabs>
+  <Tab title="Nix (recommended)">
+    The repository ships a `flake.nix` that provides a fully pinned development shell containing the Android SDK, NDK r27, and Rust with all cross-compilation targets.
+
+    <Steps>
+      <Step title="Install Nix">
+        If you don't have Nix, the easiest path is [Lix](https://lix.systems/install/), which installs with Flakes support enabled by default and can be fully uninstalled later:
+
+        ```bash
+        curl -sSf -L https://install.lix.systems/lix | sh -s -- install
+        ```
+      </Step>
+
+      <Step title="Enter the development shell">
+        From the root of the repository:
+
+        ```bash
+        nix develop
+        ```
+
+        This sets `ANDROID_SDK_ROOT`, `ANDROID_NDK_ROOT`, and `GRADLE_OPTS` automatically and puts all required tools on your `PATH`.
+      </Step>
+
+      <Step title="Build the native library">
+        Cross-compile `deltachat-core-rust` for all four Android ABIs:
+
+        ```bash
+        scripts/ndk-make.sh
+        ```
+
+        <Tip>
+          To speed up compilation, pass a single ABI. Run `adb shell uname -m` to find your device's architecture, or just assume `arm64-v8a`:
+
+          ```bash
+          scripts/ndk-make.sh arm64-v8a
+          ```
+
+          Possible values: `armeabi-v7a`, `arm64-v8a`, `x86`, `x86_64`.
+        </Tip>
+      </Step>
+
+      <Step title="Build the APK">
+        ```bash
+        ./gradlew assembleDebug
+        ```
+
+        Output APKs are written to:
+
+        - `build/outputs/apk/gplay/debug/` — variant with Google Play Services (Firebase push notifications)
+        - `build/outputs/apk/fat/debug/` — FOSS variant without Play Services
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Docker / Podman">
+    The repository provides a `Dockerfile` based on Debian 12 that installs Android command-line tools, NDK r27, and Rust. [Podman](https://podman.io/) is a drop-in replacement for Docker that does not require root.
+
+    <Steps>
+      <Step title="Build the container image">
+        Pass your current user and group IDs so that files written inside the container are owned by you on the host:
+
+        <CodeGroup>
+
+        ```bash podman
+        podman build --build-arg UID=$(id -u) --build-arg GID=$(id -g) . -t deltachat-android
+        ```
+
+        ```bash docker
+        docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) . -t deltachat-android
+        ```
+
+        </CodeGroup>
+      </Step>
+
+      <Step title="Start the container">
+        Mount the repository into the container:
+
+        <CodeGroup>
+
+        ```bash podman
+        podman run --userns=keep-id -it --name deltachat \
+          -v $(pwd):/home/app:z -w /home/app localhost/deltachat-android
+        ```
+
+        ```bash docker
+        docker run -it --name deltachat \
+          -v $(pwd):/home/app:z -w /home/app localhost/deltachat-android
+        ```
+
+        </CodeGroup>
+
+        You can leave the container with `Ctrl+D` or `exit`. To re-enter an existing container:
+
+        <CodeGroup>
+
+        ```bash podman
+        podman start -ia deltachat
+        ```
+
+        ```bash docker
+        docker start -ia deltachat
+        ```
+
+        </CodeGroup>
+      </Step>
+
+      <Step title="Install Rust toolchains">
+        Inside the container, install the Rust cross-compilation targets:
+
+        ```bash
+        scripts/install-toolchains.sh
+        ```
+
+        This installs the pinned Rust toolchain version from `scripts/rust-toolchain` and adds targets for `armv7-linux-androideabi`, `aarch64-linux-android`, `i686-linux-android`, and `x86_64-linux-android`.
+      </Step>
+
+      <Step title="Build the native library">
+        ```bash
+        scripts/ndk-make.sh
+        ```
+      </Step>
+
+      <Step title="Build the APK">
+        ```bash
+        ./gradlew assembleDebug
+        ```
+
+        APKs are written to `build/outputs/apk/gplay/debug/` and `build/outputs/apk/fat/debug/`.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Manual setup">
+    If you prefer not to use Nix or Docker, you can configure the build environment by hand.
+
+    <Steps>
+      <Step title="Install Android Studio and the NDK">
+        You have two options:
+
+        - In Android Studio, open **Tools → SDK Manager → SDK Tools**, enable **Show Package Details**, select **CMake** and NDK version `27.0.12077973` (matching `ndkVersion` in `build.gradle`), and click **Apply**.
+        - Alternatively, download the NDK manually from the [NDK Archives](https://developer.android.com/ndk/downloads) and extract it.
+
+        On 64-bit Ubuntu you may need additional 32-bit libraries:
+
+        ```bash
+        sudo apt-get install libc6:i386 libncurses5:i386 libstdc++6:i386 lib32z1 libbz2-1.0:i386
+        ```
+
+        On Fedora:
+
+        ```bash
+        sudo yum install zlib.i686 ncurses-libs.i686 bzip2-libs.i686
+        ```
+      </Step>
+
+      <Step title="Set ANDROID_NDK_ROOT">
+        Export the NDK path in your shell profile (e.g., `~/.bashrc`):
+
+        ```bash
+        export ANDROID_NDK_ROOT=${HOME}/Android/Sdk/ndk/27.0.12077973
+        export PATH=${PATH}:${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/:${ANDROID_NDK_ROOT}
+        ```
+
+        <Warning>
+          Do not add a trailing `/` to `ANDROID_NDK_ROOT`. The build scripts depend on the exact path format.
+        </Warning>
+      </Step>
+
+      <Step title="Install Rust and cross-compilation toolchains">
+        Install Rust via [rustup](https://rustup.rs/):
+
+        ```bash
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        ```
+
+        Then install the Android cross-compilation targets:
+
+        ```bash
+        scripts/install-toolchains.sh
+        ```
+      </Step>
+
+      <Step title="Build the native library">
+        ```bash
+        scripts/ndk-make.sh
+        ```
+      </Step>
+
+      <Step title="Build the APK">
+        Open the project in Android Studio (minimum API 25 is required to run it) or build from the command line:
+
+        ```bash
+        ./gradlew assembleDebug
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Build flavors
+
+The project has two product flavors:
+
+| Flavor | Application ID | Description |
+|---|---|---|
+| `gplay` | `chat.delta` | Includes Firebase Cloud Messaging for push notifications |
+| `foss` | `com.b44t.messenger` | No Play Services dependency; distributed via F-Droid and get.delta.chat |
+
+<Note>
+  Debug builds append `.beta` to the application ID (e.g. `com.b44t.messenger.beta`) so you can install a debug and a release build side-by-side. This suffix comes from the `debug` build type, not the flavor.
+</Note>
+
+Use `assembleFossDebug` or `assembleGplayDebug` to target a specific combination. The `assembleDebug` task builds both.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="./gradlew fails: 'The SDK directory does not exist'">
+    Android Studio automatically creates `local.properties` with a line like `sdk.dir=/home/username/Android/Sdk`. When building inside Docker or Podman, Gradle reads this path and fails because the host path doesn't exist inside the container.
+
+    Fix by removing the file or deleting just the `sdk.dir` line:
+
+    ```bash
+    # Remove only the sdk.dir line
+    grep -v '^sdk.dir' local.properties > local.properties.tmp && mv local.properties.tmp local.properties
+    ```
+  </Accordion>
+
+  <Accordion title="Podman fails: 'storage driver option must be set'">
+    If running the container fails with:
+
+    ```
+    ERRO[0000] The storage 'driver' option must be set in /etc/containers/storage.conf
+    ```
+
+    Open `/etc/containers/storage.conf` and change:
+
+    ```
+    driver = ""
+    ```
+
+    to:
+
+    ```
+    driver = "overlay"
+    ```
+
+    Any valid driver value will resolve the error. See the [containers-storage documentation](https://github.com/containers/storage/blob/master/docs/containers-storage.conf.5.md#storage-table) for available options.
+  </Accordion>
+
+  <Accordion title="Setting up rootless Podman">
+    To run Podman without root privileges, create subuid and subgid mappings for your user:
+
+    ```bash
+    sudo touch /etc/subgid
+    sudo touch /etc/subuid
+    sudo usermod --add-subuids 165536-231072 --add-subgids 165536-231072 yourusername
+    ```
+
+    See the [Arch Wiki on rootless Podman](https://wiki.archlinux.org/index.php/Podman#Rootless_Podman) for more detail.
+  </Accordion>
+
+  <Accordion title="ndk-make.sh: ANDROID_NDK_ROOT is not set">
+    The script checks `ANDROID_NDK_ROOT` (and falls back to `ANDROID_NDK_HOME` and `ANDROID_NDK`). Make sure you have exported one of these in your current shell session. If you are using the Nix development shell, this is set automatically.
+  </Accordion>
+</AccordionGroup>

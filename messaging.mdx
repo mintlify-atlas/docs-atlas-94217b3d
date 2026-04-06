@@ -1,0 +1,90 @@
+---
+title: "Messaging"
+description: "Send and receive messages, react, reply, and manage your conversations in Delta Chat."
+---
+
+Delta Chat conversations work like any modern chat app — but every message is routed over email and encrypted end-to-end automatically.
+
+## Sending messages
+
+Tap the compose button (pencil icon) on the chat list to start a new conversation, or open an existing chat and type in the message field at the bottom.
+
+- **Text** — Type and tap send. Messages are delivered as encrypted email.
+- **Emoji** — Open the emoji picker from the keyboard or long-press the send button.
+- **Voice message** — Hold the microphone icon to record; release to send. Tap to cancel.
+- **Stickers** — Tap the sticker icon in the attachment bar to open the sticker picker.
+- **Attachments** — Tap the paperclip icon to attach images, videos, files, or a contact card.
+
+## Replying and quoting
+
+Swipe right on any message to quote it in your reply. The quoted text appears above your new message so recipients see the context.
+
+You can also long-press a message and tap **Reply** from the context menu.
+
+## Reactions
+
+Long-press a message and select an emoji to send a reaction. Reactions are visible to all participants and trigger a `DC_EVENT_REACTIONS_CHANGED` event in the app.
+
+## Forwarding messages
+
+Long-press a message, tap **Forward**, then choose the destination chat. You can forward to multiple chats at once using the multi-select checkboxes.
+
+## Message status
+
+Each outgoing message shows a status indicator:
+
+| Icon | State | Description |
+|------|-------|-------------|
+| Clock | Pending (`DC_STATE_OUT_PENDING`) | Queued, not yet sent |
+| Single check | Delivered (`DC_STATE_OUT_DELIVERED`) | Received by the server |
+| Double check | Read (`DC_STATE_OUT_MDN_RCVD`) | Opened by the recipient |
+| Warning | Failed (`DC_STATE_OUT_FAILED`) | Delivery error — tap to retry |
+
+<Note>
+  Read receipts require the recipient to also use Delta Chat. If they read your message in a standard email client, only the single-check "delivered" state is shown.
+</Note>
+
+## Deleting messages
+
+Long-press a message and tap **Delete**. You can:
+- **Delete for me** — removes the message from your device only.
+- **Delete for everyone** — sends a delete request to all participants (only works if they use Delta Chat).
+
+A `DC_EVENT_MSG_DELETED` event causes the notification to be removed automatically when a sender deletes a message.
+
+## Disappearing (ephemeral) messages
+
+Set a timer so messages self-delete after they've been read:
+
+<Steps>
+  <Step title="Open chat settings">
+    In a chat, tap the chat name at the top to open the chat profile.
+  </Step>
+  <Step title="Set the timer">
+    Tap **Disappearing messages** and choose a duration (1 minute, 1 hour, 1 day, 1 week, etc.).
+  </Step>
+  <Step title="Messages auto-delete">
+    New messages in this chat are deleted from all devices after the timer expires, starting from when the message was read.
+  </Step>
+</Steps>
+
+<Tip>
+  Both sides must use Delta Chat for the timer to work reliably. The timer is shown as a system message in the chat when changed.
+</Tip>
+
+## Muting chats
+
+To silence notifications from a chat without leaving it, long-press the chat in the chat list and tap **Mute**. Choose a duration or mute indefinitely.
+
+Muted chats still receive messages — they just don't produce sound or vibration.
+
+## Pinning and archiving
+
+- **Pin** — Long-press a chat and tap **Pin** to keep it at the top of your list. Up to a handful of chats can be pinned.
+- **Archive** — Swipe a chat left and tap **Archive** to move it out of the main list. Archived chats appear under the "Archived chats" entry at the bottom of the list.
+
+## Searching
+
+Tap the search icon at the top of the chat list to search across all your conversations. You can also search within a single chat by tapping the magnifier in the chat toolbar.
+
+Search is case-insensitive and works with non-ASCII characters.

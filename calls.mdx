@@ -1,0 +1,77 @@
+---
+title: "Voice and Video Calls"
+description: "Make encrypted voice and video calls directly inside Delta Chat using WebRTC."
+---
+
+Delta Chat supports one-on-one voice and video calls using WebRTC. Calls are initiated directly from a chat and work over any internet connection.
+
+## Starting a call
+
+<Tabs>
+  <Tab title="Voice call">
+    Open a direct chat with the person you want to call, then tap the **phone icon** in the top toolbar. The call starts immediately.
+  </Tab>
+  <Tab title="Video call">
+    Open a direct chat and tap the **video camera icon** in the top toolbar. You can disable your camera before or during the call.
+  </Tab>
+</Tabs>
+
+<Note>
+  Calls are only available in one-on-one (single) chats. Group calls are not currently supported.
+</Note>
+
+## Starting a call with video disabled
+
+When initiating a call, you can choose to start with your camera off. Tap the camera toggle before confirming the call — you can turn it on at any time once connected.
+
+## In-call controls
+
+Once a call is connected, the following controls are available:
+
+| Control | Action |
+|---------|--------|
+| Microphone | Mute/unmute your audio |
+| Camera | Turn video on/off |
+| Speaker | Toggle speakerphone / earpiece |
+| Audio device | Pick headphones, Bluetooth, or speaker |
+| End call | Hang up |
+
+## Audio device picker
+
+If multiple audio output devices are available (wired headphones, Bluetooth headset, speakerphone), tap the audio device button to choose the active one. Delta Chat will remember your preference within the call session.
+
+## Incoming calls
+
+When someone calls you, Delta Chat shows a full-screen incoming call notification with **Accept** and **Decline** options. You can also accept with video disabled.
+
+- Accepting or declining the call marks the call message as seen (`DC_EVENT_INCOMING_CALL_ACCEPTED`).
+- Missed calls appear in the chat as a call bubble.
+
+## Call notifications
+
+Delta Chat uses a foreground service to handle incoming calls reliably, even when the app is in the background. The following events drive call state:
+
+| Event constant | Value | Meaning |
+|----------------|-------|---------|
+| `DC_EVENT_INCOMING_CALL` | 2550 | Someone is calling you |
+| `DC_EVENT_INCOMING_CALL_ACCEPTED` | 2560 | You accepted an incoming call |
+| `DC_EVENT_OUTGOING_CALL_ACCEPTED` | 2570 | The other person accepted your call |
+| `DC_EVENT_CALL_ENDED` | 2580 | Call finished or was declined |
+
+## How calls work
+
+Delta Chat calls use [BasicWebRTC](https://github.com/BasqueVoIPMafia/cordova-plugin-iosrtc) — a peer-to-peer WebRTC implementation. The signalling channel runs over the same encrypted messaging infrastructure as regular chat messages, so no separate call server is required.
+
+<Tip>
+  Because calls use peer-to-peer WebRTC, call quality depends on your network connection. On poor networks, audio quality may be reduced but calls remain end-to-end encrypted.
+</Tip>
+
+## Permissions
+
+Calls require the following Android permissions, which Delta Chat requests the first time you initiate or receive a call:
+
+- `RECORD_AUDIO` — microphone access for voice
+- `CAMERA` — camera access for video
+- `MODIFY_AUDIO_SETTINGS` — control audio routing
+- `BLUETOOTH_CONNECT` — use Bluetooth audio devices
+- `MANAGE_OWN_CALLS` — integrate with the Android telecom system
